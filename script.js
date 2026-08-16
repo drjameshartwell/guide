@@ -1,0 +1,660 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Dr. James Hartwell — site behaviour
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// Respect the OS "reduce motion" setting everywhere below.
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const IS_TOUCH = window.matchMedia('(hover: none)').matches;
+
+// ── LOADER ──────────────────────────────────────────────────────────────
+// Must never trap the page. Three independent ways out: the load event, a
+// hard 3s ceiling, and the <noscript> rule in the head.
+(function initLoader() {
+  const loader = document.getElementById('loader');
+  if (!loader) return;
+
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+    loader.classList.add('done');
+  };
+
+  window.addEventListener('load', () => setTimeout(dismiss, REDUCED_MOTION ? 0 : 1400));
+  setTimeout(dismiss, 3000);           // safety net if `load` never fires
+  window.addEventListener('error', dismiss, true);
+})();
+
+// ── TOAST ───────────────────────────────────────────────────────────────
+// Single reusable notice. Announced to screen readers via aria-live.
+const showToast = (function () {
+  let host = null;
+  let hideTimer = null;
+
+  return function showToast(message, type = 'info', duration = 4200) {
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'toast-host';
+      host.setAttribute('role', 'status');
+      host.setAttribute('aria-live', 'polite');
+      document.body.appendChild(host);
+    }
+
+    host.innerHTML = '';
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.textContent = message;
+    host.appendChild(toast);
+
+    // force reflow so the entry transition actually runs
+    void toast.offsetWidth;
+    toast.classList.add('is-visible');
+
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      toast.classList.remove('is-visible');
+      setTimeout(() => { if (host) host.innerHTML = ''; }, 400);
+    }, duration);
+  };
+})();
+
+// ── CURSOR ──────────────────────────────────────────────────────────────
+// Skipped entirely on touch devices — it was running a rAF loop forever on
+// phones where the CSS already hides it.
+if (!IS_TOUCH && !REDUCED_MOTION) {
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+
+  if (cursor && ring) {
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+    }, { passive: true });
+
+    (function animRing() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(animRing);
+    })();
+
+    const grow = () => {
+      cursor.style.width = '18px';  cursor.style.height = '18px';
+      ring.style.width = '54px';    ring.style.height = '54px';
+      ring.style.opacity = '0.7';
+    };
+    const shrink = () => {
+      cursor.style.width = '10px';  cursor.style.height = '10px';
+      ring.style.width = '36px';    ring.style.height = '36px';
+      ring.style.opacity = '1';
+    };
+
+    // Delegated, so it also covers the guide cards added to the DOM later.
+    document.addEventListener('mouseover', e => {
+      if (e.target.closest('a, button, .series-card, .book-float, .asset-card')) grow();
+    });
+    document.addEventListener('mouseout', e => {
+      if (e.target.closest('a, button, .series-card, .book-float, .asset-card')) shrink();
+    });
+  }
+}
+
+// ── NAV SCROLL ──────────────────────────────────────────────────────────
+const nav = document.getElementById('nav');
+if (nav) {
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+}
+
+// ── MOBILE MENU ─────────────────────────────────────────────────────────
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+
+function closeMobileMenu() {
+  if (!hamburger || !mobileMenu) return;
+  hamburger.classList.remove('open');
+  hamburger.setAttribute('aria-expanded', 'false');
+  hamburger.setAttribute('aria-label', 'Open menu');
+  mobileMenu.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+if (hamburger && mobileMenu) {
+  hamburger.addEventListener('click', () => {
+    const willOpen = !mobileMenu.classList.contains('open');
+    hamburger.classList.toggle('open', willOpen);
+    mobileMenu.classList.toggle('open', willOpen);
+    hamburger.setAttribute('aria-expanded', String(willOpen));
+    hamburger.setAttribute('aria-label', willOpen ? 'Close menu' : 'Open menu');
+    document.body.style.overflow = willOpen ? 'hidden' : '';
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && mobileMenu.classList.contains('open')) closeMobileMenu();
+  });
+}
+
+// ── SCROLL REVEAL ────────────────────────────────────────────────────────
+(function initReveal() {
+  const revealEls = document.querySelectorAll('.reveal');
+  if (REDUCED_MOTION) {
+    revealEls.forEach(el => el.classList.add('visible'));
+    return;
+  }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => io.observe(el));
+})();
+
+// ── PARALLAX BOOKS ───────────────────────────────────────────────────────
+if (!REDUCED_MOTION) {
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const scrolled = window.scrollY;
+      const stage = document.getElementById('booksStage');
+      if (stage && scrolled < window.innerHeight) {
+        stage.style.transform = `translateY(${scrolled * 0.08}px)`;
+      }
+      ticking = false;
+    });
+  }, { passive: true });
+}
+
+// ── BOOK 3D MOUSE TILT ────────────────────────────────────────────────────
+(function initTilt() {
+  const stage = document.getElementById('booksStage');
+  if (!stage || IS_TOUCH || REDUCED_MOTION) return;
+
+  stage.addEventListener('mousemove', e => {
+    const rect = stage.getBoundingClientRect();
+    const dx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+    const dy = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+    stage.style.transition = 'transform 0.1s';
+    stage.style.transform = `rotateY(${dx * 6}deg) rotateX(${-dy * 4}deg)`;
+  });
+  stage.addEventListener('mouseleave', () => {
+    stage.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+    stage.style.transform = '';
+  });
+})();
+
+// ── FREE GUIDES: DOWNLOAD, LOCKED STATE, SHARE ───────────────────────────
+// No email gate and no fake success message. A guide either downloads or
+// honestly says it isn't ready.
+(function initGuides() {
+  const grid = document.querySelector('.premium-asset-grid');
+  if (!grid) return;
+
+  function triggerDownload(card) {
+    const file = card.getAttribute('data-file');
+    const title = card.getAttribute('data-title') || 'the guide';
+
+    if (!file) {
+      showToast('This guide isn’t attached yet. Please try again shortly.', 'error');
+      return;
+    }
+
+    // Anchor with `download` keeps the user on the page instead of navigating.
+    const a = document.createElement('a');
+    a.href = file;
+    a.download = file.split('/').pop();
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    showToast(`Downloading "${title}" — check your downloads folder.`, 'success');
+  }
+
+  // "What's inside" disclosure. Mobile-only in CSS, but the handler is
+  // harmless on desktop where the button is display:none and unclickable.
+  grid.addEventListener('click', e => {
+    const toggle = e.target.closest('.asset-inside-toggle');
+    if (!toggle) return;
+    const wrap = toggle.closest('.asset-inside');
+    if (!wrap) return;
+    const open = wrap.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    const card = btn.closest('.asset-card');
+    if (!card) return;
+
+    const action = btn.getAttribute('data-action');
+    const title = card.getAttribute('data-title') || 'This guide';
+
+    if (action === 'download') {
+      triggerDownload(card);
+
+    } else if (action === 'locked') {
+      showToast(`"${title}" is still being written. Please check back soon — it’s coming.`, 'info');
+
+    } else if (action === 'share') {
+      shareGuide(title, '#' + card.id);
+    }
+  });
+})();
+
+// ── NATIVE WEB SHARE ──────────────────────────────────────────────────────
+// The shared URL carries the card's anchor, so whoever opens it gets scrolled
+// gently down to the guides section (see initDeepLinkScroll below).
+function shareGuide(title, anchorId) {
+  const fullUrl = window.location.origin + window.location.pathname + anchorId;
+  const text = `Free clinical guide from Dr. James Hartwell: ${title}`;
+
+  if (navigator.share) {
+    navigator.share({ title, text, url: fullUrl }).catch(err => {
+      if (err && err.name !== 'AbortError') copyLink(fullUrl);
+    });
+  } else {
+    copyLink(fullUrl);
+  }
+}
+
+function copyLink(url) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('Link copied to your clipboard.', 'success'))
+      .catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+// clipboard API needs HTTPS; this covers plain-http and older browsers
+function fallbackCopy(url) {
+  const ta = document.createElement('textarea');
+  ta.value = url;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+  ta.remove();
+  showToast(ok ? 'Link copied to your clipboard.' : url, ok ? 'success' : 'info', ok ? 4200 : 8000);
+}
+
+// ── DEEP LINK: SLOW GLIDE TO THE SHARED GUIDE ────────────────────────────
+// Someone opens a shared link and gets eased down to the guides section,
+// with the specific card briefly highlighted so they know which one.
+(function initDeepLinkScroll() {
+  const GUIDE_HASHES = ['#guides'];
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function glideTo(target, duration = 2200) {
+    const navH = 90;
+    const endY = Math.max(0, target.getBoundingClientRect().top + window.scrollY - navH);
+
+    if (REDUCED_MOTION) { window.scrollTo(0, endY); return Promise.resolve(); }
+
+    const startY = window.scrollY;
+    const delta = endY - startY;
+    if (Math.abs(delta) < 4) return Promise.resolve();
+
+    // our own easing must not fight CSS scroll-behavior:smooth
+    const root = document.documentElement;
+    const prevBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+
+    return new Promise(resolve => {
+      const start = performance.now();
+      (function step(now) {
+        const t = Math.min(1, (now - start) / duration);
+        window.scrollTo(0, startY + delta * easeInOutCubic(t));
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          root.style.scrollBehavior = prevBehavior;
+          resolve();
+        }
+      })(start);
+    });
+  }
+
+  function handleHash() {
+    const hash = window.location.hash;
+    if (!hash || hash.length < 2) return;
+
+    let card = null;
+    let target = null;
+
+    if (GUIDE_HASHES.includes(hash)) {
+      target = document.getElementById('guides');
+    } else {
+      const el = document.getElementById(hash.slice(1));
+      if (el && el.classList.contains('asset-card')) {
+        card = el;
+        target = document.getElementById('guides') || el;
+      }
+    }
+    if (!target) return;
+
+    // Wait out the loader so the glide isn't hidden behind the overlay.
+    setTimeout(() => {
+      glideTo(target).then(() => {
+        if (!card) return;
+        card.classList.add('is-highlighted');
+        card.scrollIntoView({ behavior: REDUCED_MOTION ? 'auto' : 'smooth', block: 'center' });
+        setTimeout(() => card.classList.remove('is-highlighted'), 2600);
+      });
+    }, REDUCED_MOTION ? 0 : 1900);
+  }
+
+  // Browsers jump to the anchor instantly on load; undo that, then glide.
+  if (window.location.hash) {
+    const h = window.location.hash;
+    const known = GUIDE_HASHES.includes(h) || !!document.getElementById(h.slice(1));
+    if (known && !REDUCED_MOTION) {
+      window.scrollTo(0, 0);
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', handleHash);
+})();
+
+// ── INERT PLACEHOLDER LINKS ──────────────────────────────────────────────
+// Any <a data-pending> has no real URL yet. Rather than dumping the visitor
+// at "#" or a 404, tell them the truth. Delete data-pending once the real
+// href is in place and the link works normally again.
+document.addEventListener('click', e => {
+  const link = e.target.closest('a[data-pending]');
+  if (!link) return;
+  e.preventDefault();
+  const label = (link.getAttribute('data-book') || link.textContent || 'This link').trim();
+  showToast(`${label} isn’t linked up yet — it’s coming very soon.`, 'info');
+});
+
+// ── FOOTER YEAR ──────────────────────────────────────────────────────────
+(function () {
+  const y = document.getElementById('footerYear');
+  if (y) y.textContent = new Date().getFullYear();
+})();
+
+// ── FLASHCARD STACK ANIMATION ─────────────────────────────────────────────
+function initBookStacks() {
+  if (REDUCED_MOTION) return;
+
+  document.querySelectorAll('.series-stack').forEach(stack => {
+    const cards = Array.from(stack.querySelectorAll('.stack-cover'));
+    if (cards.length <= 1) return;
+
+    let currentIndex = 0;
+
+    function cycleStack() {
+      cards.forEach((card, i) => {
+        const offset = (i - currentIndex + cards.length) % cards.length;
+
+        if (offset === 0) {
+          card.style.transform = 'translateZ(0px) translateX(0px) translateY(0px) scale(1)';
+          card.style.zIndex = 10;
+          card.style.opacity = 1;
+        } else if (offset === 1) {
+          card.style.transform = 'translateZ(-40px) translateX(20px) translateY(15px) scale(0.9)';
+          card.style.zIndex = 9;
+          card.style.opacity = 0.8;
+        } else if (offset === 2) {
+          card.style.transform = 'translateZ(-80px) translateX(40px) translateY(30px) scale(0.8)';
+          card.style.zIndex = 8;
+          card.style.opacity = 0.5;
+        } else {
+          card.style.transform = 'translateZ(-120px) translateX(0px) translateY(45px) scale(0.7)';
+          card.style.zIndex = Math.max(1, 7 - offset);
+          card.style.opacity = 0;
+        }
+      });
+      currentIndex = (currentIndex + 1) % cards.length;
+    }
+
+    cycleStack();
+    // Pause when the tab is hidden — this used to run forever in background tabs.
+    setInterval(() => { if (!document.hidden) cycleStack(); }, 3500);
+  });
+}
+document.addEventListener('DOMContentLoaded', initBookStacks);
+
+// ── AUTO-PANNING PILLS (MOBILE) ───────────────────────────────────────────
+function initPillScroller() {
+  if (REDUCED_MOTION) return;
+
+  document.querySelectorAll('.series-books').forEach(container => {
+    let direction = 1;
+    let isTouching = false;
+    let resumeTimer = null;
+
+    container.addEventListener('touchstart', () => {
+      isTouching = true;
+      clearTimeout(resumeTimer);
+    }, { passive: true });
+
+    container.addEventListener('touchend', () => {
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => { isTouching = false; }, 1500);
+    }, { passive: true });
+
+    setInterval(() => {
+      if (document.hidden || window.innerWidth > 900 || isTouching) return;
+      if (container.scrollWidth <= container.clientWidth) return;
+
+      container.scrollLeft += direction;
+
+      if (Math.ceil(container.scrollLeft) >= (container.scrollWidth - container.clientWidth)) {
+        direction = -1;
+      } else if (container.scrollLeft <= 0) {
+        direction = 1;
+      }
+    }, 30);
+  });
+}
+document.addEventListener('DOMContentLoaded', initPillScroller);
+
+// ── AUTO-BOUNCE PRINCIPLES MARQUEE ───────────────────────────────────────
+function initPrinciplesScroller() {
+  const track = document.getElementById('principlesTrack');
+  if (!track || REDUCED_MOTION) return;
+
+  let direction = 1;
+  const speed = 1;
+  let isPaused = false;
+  let resumeTimer = null;
+
+  track.addEventListener('mouseenter', () => { isPaused = true; });
+  track.addEventListener('mouseleave', () => { isPaused = false; });
+  track.addEventListener('touchstart', () => {
+    isPaused = true;
+    clearTimeout(resumeTimer);
+  }, { passive: true });
+  track.addEventListener('touchend', () => {
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => { isPaused = false; }, 1500);
+  }, { passive: true });
+
+  setInterval(() => {
+    if (document.hidden || isPaused || window.innerWidth > 900) return;
+
+    const container = track.parentElement;
+    if (!container) return;
+    const maxScroll = track.scrollWidth - container.clientWidth;
+    if (maxScroll <= 0) return;
+
+    container.scrollLeft += direction * speed;
+
+    if (Math.ceil(container.scrollLeft) >= maxScroll) direction = -1;
+    else if (container.scrollLeft <= 0) direction = 1;
+  }, 30);
+}
+document.addEventListener('DOMContentLoaded', initPrinciplesScroller);
+
+// ── HERO BOOK 3D CAROUSEL SWAPPER ─────────────────────────────────────────
+function initHeroSwapper() {
+  const books = ['book1', 'book2', 'book3', 'book4', 'book5']
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+
+  if (books.length < 5) return;
+
+  const getPositions = () => {
+    const isMobile = window.innerWidth <= 900;
+    if (isMobile) {
+      return [
+        { transform: 'translate(-50px, -75px) scale(1.4)', zIndex: 5, opacity: 1 },
+        { transform: 'translate(10px, -90px) rotate(8deg) scale(1.15)', zIndex: 4, opacity: 0.85 },
+        { transform: 'translate(40px, -60px) rotate(15deg) scale(0.95)', zIndex: 3, opacity: 0.5 },
+        { transform: 'translate(-140px, -60px) rotate(-15deg) scale(0.95)', zIndex: 2, opacity: 0.5 },
+        { transform: 'translate(-110px, -90px) rotate(-8deg) scale(1.15)', zIndex: 4, opacity: 0.85 }
+      ];
+    }
+    return [
+      { transform: 'translate(-80px, -110px) scale(1.15)', zIndex: 5, opacity: 1 },
+      { transform: 'translate(30px, -130px) rotate(8deg) scale(0.9)', zIndex: 4, opacity: 0.85 },
+      { transform: 'translate(90px, -80px) rotate(15deg) scale(0.75)', zIndex: 3, opacity: 0.5 },
+      { transform: 'translate(-250px, -80px) rotate(-15deg) scale(0.75)', zIndex: 2, opacity: 0.5 },
+      { transform: 'translate(-190px, -130px) rotate(-8deg) scale(0.9)', zIndex: 4, opacity: 0.85 }
+    ];
+  };
+
+  let currentIndex = 0;
+
+  function cycleHeroBooks() {
+    const positions = getPositions();
+
+    books.forEach((book, i) => {
+      const pos = positions[(i - currentIndex + books.length) % books.length];
+
+      book.style.animation = 'none';
+      book.style.transition = REDUCED_MOTION
+        ? 'none'
+        : 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      book.style.left = '50%';
+      book.style.top = '50%';
+      book.style.marginLeft = '0';
+      book.style.marginTop = '0';
+      book.style.transform = pos.transform;
+      book.style.zIndex = pos.zIndex;
+      book.style.opacity = pos.opacity;
+    });
+
+    currentIndex = (currentIndex + 1) % books.length;
+  }
+
+  cycleHeroBooks();
+  if (REDUCED_MOTION) return;                // lay them out once, then stop
+  setInterval(() => { if (!document.hidden) cycleHeroBooks(); }, 3000);
+
+  // Positions are breakpoint-dependent, so re-lay-out on resize.
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      currentIndex = (currentIndex - 1 + books.length) % books.length;
+      cycleHeroBooks();
+    }, 200);
+  });
+}
+document.addEventListener('DOMContentLoaded', initHeroSwapper);
+
+// ── TWO-STEP REVIEW MODAL ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const openBtn = document.getElementById('openReviewBtn');
+  const closeBtn = document.getElementById('closeReviewBtn');
+  const modal = document.getElementById('reviewModal');
+  if (!openBtn || !modal || !closeBtn) return;
+
+  const viewport = modal.querySelector('.modal-slider-viewport');
+  const track = document.getElementById('modalTrack');
+  const step1 = modal.querySelector('.step-1');
+  const step2 = modal.querySelector('.step-2');
+  const seriesBtns = modal.querySelectorAll('.modal-series-btn');
+  const backBtn = document.getElementById('modalBackBtn');
+  const bookGroups = modal.querySelectorAll('.book-group');
+
+  let lastFocused = null;
+
+  function setViewportHeight(stepElement) {
+    if (viewport && stepElement) viewport.style.height = stepElement.offsetHeight + 'px';
+  }
+
+  function openModal(e) {
+    if (e) e.preventDefault();
+    lastFocused = document.activeElement;
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    setViewportHeight(step1);
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+
+    setTimeout(() => {
+      if (track) track.style.transform = 'translateX(0)';
+      if (viewport) viewport.style.height = 'auto';
+    }, 300);
+
+    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+  });
+
+  seriesBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      bookGroups.forEach(g => g.classList.remove('active-group'));
+      const targetGroup = document.getElementById(targetId);
+      if (targetGroup) targetGroup.classList.add('active-group');
+
+      if (track) track.style.transform = 'translateX(-50%)';
+      setViewportHeight(step2);
+      if (backBtn) backBtn.focus();
+    });
+  });
+
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      if (track) track.style.transform = 'translateX(0)';
+      setViewportHeight(step1);
+    });
+  }
+
+  // Keep the sliding viewport honest when the layout reflows.
+  let mResize = null;
+  window.addEventListener('resize', () => {
+    if (!modal.classList.contains('active')) return;
+    clearTimeout(mResize);
+    mResize = setTimeout(() => {
+      const onStep2 = track && track.style.transform.includes('-50%');
+      setViewportHeight(onStep2 ? step2 : step1);
+    }, 150);
+  });
+});

@@ -1,0 +1,2196 @@
+/* ── RESET & BASE ─────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:     #0D1B2A;
+  --navy-mid: #162538;
+  --navy-lit: #1E3450;
+  --gold:     #C9A84C;
+  --gold-lt:  #E8CC80;
+  --gold-dim: #7A6028;
+  --cream:    #F5F0E8;
+  --cream-dim:#C8BFA8;
+  --white:    #FFFFFF;
+  --heart:    #C0392B;
+  --heart-lt: #E8A89F;
+  --dash:     #1A6B3C;
+  --dash-lt:  #A8D5B5;
+  --mind:     #6B3FA0;
+  --mind-lt:  #C9AAEA;
+  --kids:     #D97706;
+  --kids-lt:  #F5D08A;
+  --pet:      #2563EB;
+  --pet-lt:   #A8C4F5;
+  --ai:       #0891B2;
+  --ai-lt:    #A5D8E8;
+  --font-display:'Cormorant Garamond',Georgia,serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--navy);
+  color:var(--cream);
+  font-family:var(--font-body);
+  font-weight:400;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
+}
+
+/* ── NOISE TEXTURE ────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;
+}
+
+/* ── LOADER ───────────────────────────────────────── */
+#loader{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9998;transition:opacity 0.6s var(--ease-out),visibility 0.6s;
+}
+#loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.loader-text{
+  font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.5rem);
+  font-weight:300;color:var(--gold);letter-spacing:0.15em;
+  opacity:0;animation:loaderFade 1.4s var(--ease-out) 0.2s forwards;
+}
+@keyframes loaderFade{
+  0%{opacity:0;transform:translateY(16px)}
+  40%{opacity:1;transform:translateY(0)}
+  80%{opacity:1}
+  100%{opacity:0;transform:translateY(-8px)}
+}
+
+/* ── CURSOR ───────────────────────────────────────── */
+.cursor{
+  position:fixed;width:10px;height:10px;border-radius:50%;
+  background:var(--gold);pointer-events:none;z-index:9997;
+  transform:translate(-50%,-50%);
+  transition:transform 0.1s,width 0.3s var(--ease-spring),height 0.3s var(--ease-spring),opacity 0.3s;
+  mix-blend-mode:screen;
+}
+.cursor-ring{
+  position:fixed;width:36px;height:36px;border-radius:50%;
+  border:1px solid rgba(201,168,76,0.5);pointer-events:none;z-index:9996;
+  transform:translate(-50%,-50%);
+  transition:transform 0.18s var(--ease-out),width 0.4s var(--ease-spring),height 0.4s var(--ease-spring),opacity 0.3s;
+}
+body:hover .cursor{opacity:1}
+@media(hover:none){.cursor,.cursor-ring{display:none}}
+
+/* ── NAV ──────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.2rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background 0.4s,backdrop-filter 0.4s,box-shadow 0.4s;
+}
+nav.scrolled{
+  background:rgba(13,27,42,0.88);
+  backdrop-filter:blur(18px);
+  box-shadow:0 1px 0 rgba(201,168,76,0.15);
+}
+.nav-logo{
+  font-family:var(--font-display);font-size:1.3rem;font-weight:600;
+  color:var(--gold);letter-spacing:0.04em;text-decoration:none;
+}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{
+  font-size:0.8rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--cream-dim);text-decoration:none;
+  transition:color 0.2s;position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;
+  background:var(--gold);transition:width 0.3s var(--ease-out);
+}
+.nav-links a:hover{color:var(--gold)}
+.nav-links a:hover::after{width:100%}
+.nav-cta{
+  font-size:0.75rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--navy);background:var(--gold);
+  padding:0.55rem 1.4rem;text-decoration:none;
+  transition:background 0.2s,transform 0.2s;
+}
+.nav-cta:hover{background:var(--gold-lt);transform:translateY(-1px)}
+.hamburger{
+  display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;
+}
+.hamburger span{
+  display:block;width:22px;height:2px;background:var(--gold);
+  transition:transform 0.3s,opacity 0.3s;
+}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mobile-menu{
+  display:none;position:fixed;inset:0;top:0;
+  background:rgba(13,27,42,0.97);backdrop-filter:blur(20px);
+  z-index:99;align-items:center;justify-content:center;flex-direction:column;gap:2.5rem;
+}
+.mobile-menu.open{display:flex}
+.mobile-menu a{
+  font-family:var(--font-display);font-size:2rem;font-weight:300;
+  color:var(--cream);text-decoration:none;letter-spacing:0.05em;
+  transition:color 0.2s;
+}
+.mobile-menu a:hover{color:var(--gold)}
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero{
+  min-height:100svh;display:flex;align-items:center;
+  position:relative;overflow:hidden;
+  padding:7rem 2.5rem 5rem;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 60% at 65% 50%,rgba(201,168,76,0.07) 0%,transparent 70%),
+              radial-gradient(ellipse 40% 40% at 20% 80%,rgba(192,57,43,0.06) 0%,transparent 60%);
+}
+.hero-grid{
+  max-width:1200px;margin:0 auto;width:100%;
+  display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;
+}
+.hero-eyebrow{
+  font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:1.2rem;
+  opacity:0;animation:fadeUp 0.7s var(--ease-out) 1.4s forwards;
+}
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(3rem,6vw,5.5rem);
+  font-weight:300;line-height:1.05;
+  color:var(--white);margin-bottom:1.5rem;
+  opacity:0;animation:fadeUp 0.8s var(--ease-out) 1.6s forwards;
+}
+.hero-title em{
+  font-style:italic;color:var(--gold);font-weight:300;
+}
+
+
+
+/* ── PREMIUM HERO INTRO (EDITORIAL AESTHETIC) ────────────────────────── */
+.premium-hero-intro {
+  margin: 1.5rem auto 2.5rem auto;
+  max-width: 520px;
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) 1.8s forwards;
+}
+
+.intro-text {
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--cream-dim);
+}
+
+/* Makes the first sentence look like an elegant, expensive hook */
+.intro-highlight {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-style: italic;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+/* ── Mobile Overrides for the Intro ── */
+@media(max-width: 900px) {
+  .premium-hero-intro {
+    text-align: left; /* Left alignment reads better on mobile */
+    padding-left: 1.5rem; /* Creates space for the accent line */
+    position: relative;
+    margin: 1.5rem 1rem 2.5rem 1rem;
+  }
+
+  /* The Sleek Gold Accent Line */
+  .premium-hero-intro::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    bottom: 5px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    border-radius: 2px;
+  }
+}
+
+/* ── STREAMLINED BUTTONS ────────────────────────── */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.8s var(--ease-out) 2s forwards;
+}
+
+.btn-text-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--cream-dim);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.btn-text-link:hover {
+  color: var(--gold);
+  transform: translateX(3px);
+}
+
+
+/* ── BRAND COLOR FIXES ────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--heart); /* The Logo Red */
+  color: var(--white);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.85rem 2rem;
+  text-decoration: none;
+  border-radius: 4px; /* Sleeker, modern corners */
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+.btn-primary:hover {
+  background: #A93226; /* Slightly darker red on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(192, 57, 43, 0.4); /* Red glow */
+}
+
+.about-badge {
+  position: absolute;
+  bottom: 1.5rem;
+  right: -1.5rem;
+  background: var(--heart); /* Logo Red */
+  color: var(--white);
+  padding: 0.8rem 1.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.4;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  border:1px solid rgba(201,168,76,0.4);color:var(--gold);
+  font-size:0.8rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  padding:0.85rem 2rem;text-decoration:none;
+  transition:border-color 0.25s,background 0.25s,transform 0.25s;
+}
+.btn-secondary:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);transform:translateY(-2px)}
+
+/* ── FLOATING BOOKS ───────────────────────────────── */
+.books-stage{
+  perspective:900px;
+  opacity:0;animation:fadeIn 1s var(--ease-out) 1.8s forwards;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;height:520px;
+}
+.book-float{
+  position:absolute;
+  transform-style:preserve-3d;
+  cursor:pointer;
+  transition:transform 0.5s var(--ease-spring),filter 0.3s;
+}
+.book-float:hover{filter:brightness(1.1)}
+.book-cover{
+  width:160px;height:220px;
+  border-radius:3px 8px 8px 3px;
+  display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;
+  padding:1.2rem 1rem;
+  position:relative;overflow:hidden;
+  box-shadow:
+    -4px 0 0 rgba(0,0,0,0.3),
+    -8px 0 12px rgba(0,0,0,0.5),
+    4px 8px 32px rgba(0,0,0,0.6),
+    inset 3px 0 0 rgba(255,255,255,0.08);
+}
+.book-cover::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.06) 0%,transparent 50%,rgba(0,0,0,0.1) 100%);
+}
+.book-cover::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:24px;
+  background:rgba(0,0,0,0.25);
+  border-right:1px solid rgba(255,255,255,0.06);
+}
+.book-label{
+  position:relative;z-index:1;
+  font-family:var(--font-display);font-weight:600;
+  font-size:0.75rem;line-height:1.3;color:rgba(255,255,255,0.95);
+  text-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+.book-label small{
+  display:block;font-family:var(--font-body);font-size:0.6rem;
+  font-weight:400;letter-spacing:0.08em;text-transform:uppercase;
+  color:rgba(255,255,255,0.6);margin-bottom:0.3rem;
+}
+
+
+
+.book-cover {
+  justify-content: space-between; /* This pushes the title up and the author down */
+}
+.book-author {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  width: 100%;
+}
+.book-author hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  margin-bottom: 0.5rem;
+}
+
+
+
+/* Individual book positions & colors */
+#book1{
+  transform:rotateY(-15deg) rotateX(3deg) translateY(0px);
+  animation:float1 6s ease-in-out 2.8s infinite;
+  left:50%;top:50%;margin-left:-140px;margin-top:-130px;
+  z-index:5;
+}
+#book2{
+  transform:rotateY(-10deg) rotateX(2deg) translateY(0px);
+  animation:float2 7s ease-in-out 3.2s infinite;
+  left:50%;top:50%;margin-left:20px;margin-top:-160px;
+  z-index:4;
+}
+#book3{
+  transform:rotateY(-18deg) rotateX(4deg);
+  animation:float3 8s ease-in-out 3.6s infinite;
+  left:50%;top:50%;margin-left:-200px;margin-top:80px;
+  z-index:3;
+}
+#book4{
+  transform:rotateY(-8deg) rotateX(2deg);
+  animation:float4 6.5s ease-in-out 4s infinite;
+  left:50%;top:50%;margin-left:100px;margin-top:50px;
+  z-index:3;
+}
+#book5{
+  transform:rotateY(-20deg) rotateX(5deg);
+  animation:float5 7.5s ease-in-out 3s infinite;
+  left:50%;top:50%;margin-left:-60px;margin-top:120px;
+  z-index:2;
+}
+@keyframes float1{0%,100%{transform:rotateY(-15deg) rotateX(3deg) translateY(0px)}50%{transform:rotateY(-12deg) rotateX(2deg) translateY(-14px)}}
+@keyframes float2{0%,100%{transform:rotateY(-10deg) rotateX(2deg) translateY(0px)}50%{transform:rotateY(-8deg) rotateX(3deg) translateY(-18px)}}
+@keyframes float3{0%,100%{transform:rotateY(-18deg) rotateX(4deg) translateY(0px)}50%{transform:rotateY(-15deg) rotateX(2deg) translateY(-10px)}}
+@keyframes float4{0%,100%{transform:rotateY(-8deg) rotateX(2deg) translateY(0px)}50%{transform:rotateY(-10deg) rotateX(4deg) translateY(-16px)}}
+@keyframes float5{0%,100%{transform:rotateY(-20deg) rotateX(5deg) translateY(0px)}50%{transform:rotateY(-16deg) rotateX(3deg) translateY(-12px)}}
+
+/* ── SCROLL INDICATOR ─────────────────────────────── */
+.scroll-hint{
+  position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:0.5rem;
+  opacity:0;animation:fadeIn 1s var(--ease-out) 3s forwards;
+}
+.scroll-hint span{font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--cream-dim)}
+.scroll-line{
+  width:1px;height:48px;background:linear-gradient(to bottom,var(--gold),transparent);
+  animation:scrollPulse 2s ease-in-out 3s infinite;
+}
+@keyframes scrollPulse{0%,100%{opacity:0.4;transform:scaleY(1)}50%{opacity:1;transform:scaleY(0.7)}}
+
+/* ── PHILOSOPHY STRIP ─────────────────────────────── */
+.philosophy-strip {
+  padding: 1.2rem 0; /* Drastically reduced vertical padding */
+  border-top: 1px solid rgba(201,168,76,0.1);
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+  background: linear-gradient(135deg, rgba(201,168,76,0.04), transparent);
+  overflow: hidden;
+}
+.marquee-track{
+  display:flex;gap:4rem;width:max-content;
+  animation:marquee 28s linear infinite;
+}
+.marquee-track:hover{animation-play-state:paused}
+.marquee-item{
+  display:flex;align-items:center;gap:1.2rem;white-space:nowrap;
+  font-family:var(--font-display);font-size:1.05rem;font-style:italic;
+  font-weight:300;color:var(--cream-dim);
+}
+.marquee-item span.dot{color:var(--gold);font-style:normal}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── SECTION COMMONS ──────────────────────────────── */
+.section{padding:6rem 2.5rem}
+.section-inner{max-width:1200px;margin:0 auto}
+.section-eyebrow{
+  font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:1rem;
+}
+.section-title{
+  font-family:var(--font-display);font-size:clamp(2rem,4vw,3.2rem);
+  font-weight:300;line-height:1.15;color:var(--white);margin-bottom:1.2rem;
+}
+.section-title em{font-style:italic;color:var(--gold)}
+.section-body{
+  font-size:1rem;font-weight:300;line-height:1.8;
+  color:var(--cream-dim);max-width:600px;
+}
+
+/* ── ABOUT THE AUTHOR (SOCIAL PROOF & AUTO-SCROLL) ────────────────────────── */
+.about-modern {
+  background: var(--navy-mid);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 6rem 2.5rem;
+  overflow: hidden; 
+}
+
+.about-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+/* ── Facebook Social Proof Card ── */
+.about-visual {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.fb-proof-card {
+  background: var(--navy);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+  width: 100%;
+  max-width: 380px;
+  transition: transform 0.4s;
+}
+
+.fb-proof-card:hover {
+  transform: translateY(-5px);
+}
+
+.fb-proof-header {
+  background: rgba(0,0,0,0.3);
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.fb-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.fb-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+}
+
+.fb-url {
+  font-size: 0.7rem;
+  color: var(--cream-dim);
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.fb-screenshot {
+  width: 100%;
+  display: block;
+}
+
+.fb-follow-btn {
+  display: block;
+  text-align: center;
+  padding: 1.2rem;
+  background: var(--heart); /* Brand Red */
+  color: var(--white);
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  transition: background 0.3s;
+}
+
+.fb-follow-btn:hover {
+  background: #A93226;
+}
+
+/* ── Text & Content Bounds ── */
+.about-content {
+  min-width: 0; /* CRITICAL: Prevents flexbox children from pushing out of the screen on mobile */
+}
+
+.about-letter {
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--cream-dim);
+  margin-bottom: 3rem;
+  max-width: 600px;
+}
+
+.about-letter p { margin-bottom: 1.2rem; }
+.about-letter p:first-child {
+  font-size: 1.3rem;
+  color: var(--white);
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+/* ── Auto-Panning Marquee Track ── */
+.principles-container {
+  width: 100%;
+  overflow: hidden; /* Hides the scrollbar completely */
+  position: relative;
+  padding: 1rem 0;
+}
+
+/* Magic gradient edges so cards fade in/out instead of clipping hard */
+.principles-container::before,
+.principles-container::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40px;
+  z-index: 2;
+  pointer-events: none;
+}
+.principles-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--navy-mid), transparent);
+}
+.principles-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--navy-mid), transparent);
+}
+
+.about-principles-track {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content; /* Allows it to grow exactly as wide as the cards */
+}
+
+.principle-card {
+  width: 260px; /* Fixed width for perfect uniformity */
+  background: linear-gradient(145deg, rgba(255,255,255,0.03), transparent);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 1.8rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.principle-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--heart); /* Brand Red Top Accent */
+}
+
+.p-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: rgba(192, 57, 43, 0.1); /* Subtle red tint */
+  border: 1px solid rgba(192, 57, 43, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+
+.p-icon { font-size: 1.4rem; }
+
+.principle-card h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--white);
+  margin-bottom: 0.6rem;
+}
+
+.principle-card p {
+  font-size: 0.85rem;
+  font-weight: 300;
+  color: var(--cream-dim);
+  line-height: 1.5;
+}
+
+/* ── RESPONSIVE FIXES FOR ABOUT SECTION ────────────────────────────── */
+@media(max-width: 900px) {
+  .about-modern {
+    padding: 4rem 1.5rem; 
+  }
+  .about-wrapper {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .fb-proof-card {
+    max-width: 100%; /* Lets it fill the mobile screen naturally */
+  }
+  .principles-container {
+    margin-left: -1.5rem; /* Bleeds the track to the edge of the phone screen */
+    margin-right: -1.5rem;
+    width: calc(100% + 3rem);
+  }
+}
+
+/* ── SERIES ───────────────────────────────────────── */
+.series-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:1.5rem;margin-top:3.5rem;
+}
+.series-card{
+  position:relative;overflow:hidden;
+  background:var(--navy-mid);
+  border:1px solid rgba(255,255,255,0.05);
+  padding:2rem;cursor:pointer;
+  transition:transform 0.4s var(--ease-spring),border-color 0.3s,box-shadow 0.4s;
+  text-decoration:none;color:inherit;display:block;
+}
+.series-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--accent-color,var(--gold)) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.4s;
+}
+.series-card:hover{transform:translateY(-6px);border-color:var(--accent-color,var(--gold));box-shadow:0 20px 48px rgba(0,0,0,0.4)}
+.series-card:hover::before{opacity:0.06}
+.series-number{
+  font-family:var(--font-display);font-size:5rem;font-weight:700;
+  line-height:1;color:rgba(255,255,255,0.04);
+  position:absolute;top:-0.5rem;right:1rem;
+  transition:color 0.3s;
+}
+.series-card:hover .series-number{color:rgba(255,255,255,0.07)}
+.series-tag{
+  display:inline-block;
+  font-size:0.65rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;
+  padding:0.3rem 0.8rem;margin-bottom:1.2rem;
+  background:rgba(var(--accent-rgb,201,168,76),0.15);
+  color:var(--accent-color,var(--gold));
+}
+.series-title{
+  font-family:var(--font-display);font-size:1.5rem;font-weight:600;
+  line-height:1.25;color:var(--white);margin-bottom:0.7rem;
+}
+.series-desc{
+  font-size:0.88rem;font-weight:300;line-height:1.7;
+  color:var(--cream-dim);margin-bottom:1.5rem;
+}
+.series-books{
+  display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.5rem;
+}
+.series-book-item{
+  display:flex;align-items:center;gap:0.7rem;
+  font-size:0.8rem;color:var(--cream-dim);
+}
+.series-book-item::before{
+  content:'';width:6px;height:6px;flex-shrink:0;
+  background:var(--accent-color,var(--gold));
+}
+.series-link{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--accent-color,var(--gold));
+  transition:gap 0.3s;
+}
+.series-card:hover .series-link{gap:0.9rem}
+.series-link svg{transition:transform 0.3s}
+.series-card:hover .series-link svg{transform:translateX(4px)}
+
+/* ── TRUST / SOCIAL PROOF (IMAGE REEL) ─────────────────────────── */
+.trust-section {
+  background: linear-gradient(135deg, var(--navy-lit), var(--navy));
+  border-top: 1px solid rgba(201,168,76,0.1);
+  overflow: hidden;
+  /* Drastically reduced top padding to kill the dead space */
+  padding: 3rem 2.5rem 1rem 2.5rem !important; 
+}
+
+.review-reel-container {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%); 
+  margin-top: 1.5rem; /* Pulled much closer to the text */
+  margin-bottom: -1rem; 
+  overflow: hidden;
+  padding: 2rem 0; /* Gives the box shadows room to breathe so they don't clip */
+  background: rgba(0,0,0,0.2); 
+  border-top: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  
+  /* The Magic Vignette Fade Effect */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+/* ── THE SEAMLESS INFINITE TRACK ─────────────────────────── */
+.review-reel {
+  display: flex;
+  width: max-content;
+  animation: reviewScroll 35s linear infinite;
+}
+
+.review-reel:hover {
+  animation-play-state: paused;
+}
+
+.review-group {
+  display: flex;
+  gap: 1.5rem;
+  /* CRITICAL: This padding replaces the gap between Group 1 and Group 2 to keep the math pixel-perfect */
+  padding-right: 1.5rem; 
+}
+
+@keyframes reviewScroll {
+  0% { transform: translateX(0); }
+  /* Shifts the entire track left by exactly half its width, instantly swapping Group 2 into Group 1's starting position */
+  100% { transform: translateX(-50%); } 
+}
+.review-img {
+  height: 240px; 
+  width: auto;   
+  object-fit: contain;
+  background: var(--white); /* Ensures transparent PNGs have a white backing */
+  padding: 0.4rem; /* Creates the clean 'polaroid' border effect */
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+
+
+/* ── RESPONSIVE FIXES FOR REVIEWS ────────────────────────────── */
+@media(max-width: 900px) {
+  .trust-section {
+    /* Extreme padding reduction for mobile to keep it highly portable */
+    padding: 1.5rem 1.5rem 0.5rem 1.5rem !important; 
+  }
+  .review-reel-container {
+    /* Wider fade on mobile screens since they are narrower */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .review-img {
+    height: 180px; 
+  }
+  .review-reel {
+    gap: 1rem;
+    animation-duration: 40s; 
+  }
+}
+
+/* ── COMPACT REVIEW CTA ───────────────────────────── */
+.review-compact-section {
+  padding: 2rem 2.5rem;
+}
+
+.review-card {
+  background: rgba(201,168,76,0.03);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 16px;
+  padding: 3.5rem 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.review-text {
+  flex: 1;
+}
+
+.review-title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 300;
+  color: var(--white);
+  margin-bottom: 0.8rem;
+  line-height: 1.2;
+}
+
+.review-title em { 
+  color: var(--gold); 
+  font-style: italic; 
+}
+
+.review-body {
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--cream-dim);
+  margin-bottom: 1.8rem;
+  max-width: 600px;
+}
+
+/* Horizontal Steps Flow */
+.mini-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--cream-dim);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; 
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 0.7rem;
+  margin-right: 6px;
+}
+
+.step-arrow { 
+  color: rgba(201,168,76,0.4); 
+  font-size: 1rem; 
+}
+
+.review-action { 
+  flex-shrink: 0; 
+}
+
+/* ── RESPONSIVE FIXES FOR REVIEW CTA ────────────────────────────── */
+@media(max-width: 900px) {
+  .review-compact-section { 
+    padding: 1.5rem; 
+  }
+  
+  .review-card {
+    flex-direction: column;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    gap: 2rem;
+  }
+  
+  .review-body {
+    margin: 0 auto 2rem auto;
+  }
+
+  .mini-steps {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .step-arrow { 
+    display: none; /* Hide arrows on mobile so the pills wrap cleanly */
+  } 
+  
+  .step-pill {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 0.4rem 1rem 0.4rem 0.4rem;
+    border-radius: 30px;
+  }
+}
+
+
+
+/* ── PREMIUM ASSET LIBRARY ────────────────────────────────────────
+   Rebuilt: the previous version was deliberately "ultra-compact" — a 75px
+   thumbnail and a description clamped to two lines — so a visitor could
+   never tell what they were about to download. These cards lead with the
+   cover, state format/length/price up front, and list what's inside.
+   ───────────────────────────────────────────────────────────────── */
+.guides-section {
+  background: var(--navy);
+  padding: 5rem 2.5rem;
+}
+
+.premium-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 1.75rem;
+  max-width: 1180px;
+  margin: 3.5rem auto 0 auto;
+  align-items: stretch;
+}
+
+.asset-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.015) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.35s var(--ease-out),
+              border-color 0.35s,
+              box-shadow 0.35s;
+}
+
+.asset-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(201,168,76,0.35);
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,0.65);
+}
+
+/* The one guide that's actually ready gets the gold treatment. */
+.asset-card.is-featured {
+  border-color: rgba(201,168,76,0.42);
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.12), 0 20px 44px -22px rgba(0,0,0,0.7);
+}
+
+/* Guides still being written read as visibly quieter. */
+.asset-card.is-locked .asset-media,
+.asset-card.is-locked .asset-title,
+.asset-card.is-locked .asset-desc,
+.asset-card.is-locked .asset-inside {
+  opacity: 0.62;
+}
+.asset-card.is-locked:hover { transform: translateY(-2px); }
+
+/* ── Head (cover + headline) ──
+   On desktop this is a plain column: cover on top, title beneath — the
+   layout stays exactly as before. On mobile it becomes a grid so the cover
+   sits beside the title instead of above it, which is what was making the
+   card so tall on small screens. */
+.asset-head {
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-headline {
+  padding: 1.5rem 1.5rem 0;
+}
+
+/* ── Cover ── */
+.asset-media {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.75rem 1.5rem 1.25rem;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 0%, rgba(201,168,76,0.10) 0%, transparent 70%),
+    rgba(0,0,0,0.22);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.asset-thumb {
+  width: auto;
+  height: 190px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 14px 30px -8px rgba(0,0,0,0.75);
+  transition: transform 0.4s var(--ease-out);
+}
+.asset-card:not(.is-locked):hover .asset-thumb { transform: translateY(-4px) scale(1.03); }
+
+.asset-status {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.7rem;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.asset-status--live {
+  background: rgba(26,107,60,0.28);
+  color: var(--dash-lt);
+  border: 1px solid rgba(168,213,181,0.4);
+}
+
+.asset-status--soon {
+  background: rgba(255,255,255,0.07);
+  color: var(--cream-dim);
+  border: 1px solid rgba(255,255,255,0.16);
+}
+
+/* ── Body ── */
+.asset-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 0 1.5rem;          /* the headline above already supplies top padding */
+}
+
+.asset-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.asset-chip {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cream-dim);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  padding: 0.28rem 0.6rem;
+  border-radius: 4px;
+}
+
+.asset-chip--format {
+  color: var(--gold);
+  background: rgba(201,168,76,0.10);
+  border-color: rgba(201,168,76,0.32);
+}
+
+.asset-title {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: 0.65rem;
+}
+
+/* No line-clamp — the description is allowed to actually describe. */
+.asset-desc {
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: var(--cream-dim);
+  line-height: 1.65;
+  margin-bottom: 1.25rem;
+}
+
+/* ── "What's inside" ── */
+.asset-inside {
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 1.15rem;
+}
+
+.asset-inside-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.7rem;
+}
+
+/* Disclosure button — mobile only. On desktop the list is simply always
+   open, so this stays hidden and .asset-inside-label does the labelling. */
+.asset-inside-toggle {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.asset-inside-chevron {
+  flex-shrink: 0;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.asset-inside.is-open .asset-inside-chevron { transform: rotate(180deg); }
+
+.asset-inside-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.asset-inside-list li {
+  position: relative;
+  padding-left: 1.35rem;
+  font-size: 0.82rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--cream);
+  opacity: 0.85;
+}
+
+.asset-inside-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.52em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.75;
+}
+
+.asset-disclaimer {
+  font-size: 0.7rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--cream-dim);
+  opacity: 0.6;
+  font-style: italic;
+  margin-top: auto;          /* pins it to the bottom of the body */
+  padding-bottom: 1.15rem;
+}
+
+/* ── Actions ── */
+.asset-actions {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0 1.5rem 1.5rem;
+  margin-top: auto;
+}
+
+.asset-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.9rem 1rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* Locked buttons stay focusable and announce themselves, but read as inert. */
+.asset-card.is-locked .asset-btn {
+  background: rgba(255,255,255,0.06);
+  color: var(--cream-dim);
+  border: 1px solid rgba(255,255,255,0.13);
+  cursor: not-allowed;
+}
+.asset-card.is-locked .asset-btn:hover {
+  background: rgba(255,255,255,0.10);
+  color: var(--cream);
+  transform: none;
+}
+
+.asset-share {
+  width: 46px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  color: var(--cream-dim);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.asset-share:hover {
+  color: var(--gold);
+  background: rgba(201,168,76,0.10);
+  border-color: rgba(201,168,76,0.35);
+}
+
+/* Highlight applied when someone arrives from a shared link. */
+.asset-card.is-highlighted {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.20), 0 0 44px -6px rgba(201,168,76,0.35);
+  animation: assetPulse 2.4s var(--ease-out);
+}
+
+@keyframes assetPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(201,168,76,0.45); }
+  60%  { box-shadow: 0 0 0 12px rgba(201,168,76,0); }
+  100% { box-shadow: 0 0 0 3px rgba(201,168,76,0.20); }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────
+   The first pass just shrank the desktop card, which left a very tall
+   strip on small phones: full-bleed cover, then chips, title, description,
+   a four-item list and a disclaimer all stacked. Below, the cover moves
+   beside the title and the list collapses behind a tap — roughly 430px
+   instead of 800px+, so a whole card fits on screen at once.
+   ─────────────────────────────────────────────────────────────────── */
+@media(max-width: 768px) {
+  /* .section.guides-section, not .guides-section: a later `.section` rule in
+     the max-width:900 block has equal specificity and would win on source
+     order, silently restoring 1.5rem of side padding and narrowing the
+     swipe track by 48px. */
+  .section.guides-section { padding: 3.5rem 0; }
+  .guides-header  { padding: 0 1.5rem; }
+
+  /* Horizontal swipe track with snapping */
+  .premium-asset-grid {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 1rem;
+    padding: 1rem 1rem 1.5rem;
+    margin-top: 2rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .premium-asset-grid::-webkit-scrollbar { display: none; }
+
+  /* Wide enough that the title wraps to two lines rather than four, while
+     still leaving the next card peeking to signal the swipe. */
+  .asset-card {
+    flex: 0 0 91%;
+    scroll-snap-align: center;
+    border-radius: 14px;
+  }
+
+  /* Cover to the left, status + title + chips to the right.
+     display:contents lets the img and the badge become grid items of
+     .asset-head even though they're wrapped in .asset-media. */
+  .asset-head {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "media status"
+      "media headline";
+    column-gap: 0.9rem;
+    align-items: start;
+    padding: 1.1rem 1.1rem 0;
+  }
+
+  .asset-media {
+    display: contents;
+  }
+
+  .asset-thumb {
+    grid-area: media;
+    width: 84px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
+    box-shadow: 0 8px 18px -6px rgba(0,0,0,0.7);
+  }
+  .asset-card:not(.is-locked):hover .asset-thumb { transform: none; }
+
+  .asset-status {
+    grid-area: status;
+    position: static;
+    justify-self: start;
+    margin-bottom: 0.55rem;
+  }
+
+  .asset-headline {
+    grid-area: headline;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    min-width: 0;             /* lets long titles wrap instead of overflowing */
+  }
+
+  /* Title reads better directly beside the cover; chips drop below it. */
+  .asset-title {
+    order: 1;
+    font-size: 1.22rem;
+    line-height: 1.2;
+    margin-bottom: 0.55rem;
+  }
+
+  .asset-meta {
+    order: 2;
+    gap: 0.3rem;
+    margin-bottom: 0;
+  }
+
+  .asset-chip {
+    font-size: 0.56rem;
+    padding: 0.22rem 0.45rem;
+  }
+
+  .asset-body { padding: 1rem 1.1rem 0; }
+
+  /* Three lines is enough to sell it; the rest is in the PDF. */
+  .asset-desc {
+    font-size: 0.83rem;
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Collapsed by default — this was the single biggest height saving. */
+  .asset-inside {
+    padding-top: 0.95rem;
+    margin-bottom: 0.95rem;
+  }
+
+  .asset-inside-toggle { display: flex; }
+  .asset-inside-label  { display: none; }
+
+  .asset-inside-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;      /* also keeps it out of the screen-reader tree */
+    transition: grid-template-rows 0.35s var(--ease-out),
+                opacity 0.25s,
+                visibility 0s linear 0.35s;
+  }
+  .asset-inside-body > * { overflow: hidden; }
+
+  .asset-inside.is-open .asset-inside-body {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows 0.35s var(--ease-out),
+                opacity 0.25s,
+                visibility 0s;
+  }
+
+  .asset-inside-list  { padding-top: 0.75rem; gap: 0.45rem; }
+  .asset-inside-list li { font-size: 0.79rem; }
+
+  .asset-disclaimer {
+    font-size: 0.63rem;
+    line-height: 1.45;
+    padding-bottom: 0.95rem;
+  }
+
+  .asset-actions { padding: 0 1.1rem 1.1rem; gap: 0.5rem; }
+  .asset-btn     { padding: 0.85rem 0.75rem; font-size: 0.78rem; }
+  .asset-share   { width: 44px; }
+}
+
+/* Very small phones (iPhone SE, 320px and similar).
+   Counter-intuitively, shrinking the cover here makes the card TALLER: it
+   starves the text column so the title wraps to four lines. Instead, claw
+   width back from the track padding and keep the cover close to full size. */
+@media(max-width: 380px) {
+  .premium-asset-grid {
+    padding: 1rem 0.9rem 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .asset-card { flex: 0 0 93%; }
+
+  .asset-head {
+    grid-template-columns: 78px 1fr;
+    column-gap: 0.75rem;
+    padding: 1rem 1rem 0;
+  }
+
+  .asset-thumb { width: 78px; height: 112px; }
+
+  .asset-title { font-size: 1.06rem; line-height: 1.18; }
+  .asset-chip  { font-size: 0.53rem; padding: 0.2rem 0.4rem; }
+
+  .asset-body    { padding: 0.9rem 1rem 0; }
+  .asset-desc    { -webkit-line-clamp: 3; font-size: 0.8rem; }
+  .asset-actions { padding: 0 1rem 1rem; }
+  .asset-btn     { font-size: 0.73rem; padding: 0.8rem 0.5rem; }
+}
+
+
+/* ── FOOTER ───────────────────────────────────────── */
+footer{
+  padding:3rem 2.5rem;
+  border-top:1px solid rgba(255,255,255,0.05);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;
+}
+.footer-logo{
+  font-family:var(--font-display);font-size:1.1rem;font-weight:600;
+  color:var(--gold);letter-spacing:0.04em;
+}
+.footer-note{font-size:0.75rem;color:var(--cream-dim);opacity:0.4}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{
+  font-size:0.75rem;letter-spacing:0.06em;
+  color:var(--cream-dim);text-decoration:none;opacity:0.5;
+  transition:opacity 0.2s,color 0.2s;
+}
+.footer-links a:hover{opacity:1;color:var(--gold)}
+
+/* ── SCROLL REVEAL ────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 0.7s var(--ease-out),transform 0.7s var(--ease-out)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:0.1s}
+.reveal-delay-2{transition-delay:0.2s}
+.reveal-delay-3{transition-delay:0.3s}
+.reveal-delay-4{transition-delay:0.4s}
+
+/* ── ANIMATIONS ───────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── RESPONSIVE ───────────────────────────────────── */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:3rem}
+  .books-stage{height:360px;order:-1}
+  .book-cover{width:120px;height:165px}
+  #book1{margin-left:-110px;margin-top:-100px}
+  #book2{margin-left:10px;margin-top:-120px}
+  #book3{margin-left:-150px;margin-top:50px}
+  #book4{margin-left:70px;margin-top:35px}
+  #book5{margin-left:-40px;margin-top:85px}
+  .about-grid{grid-template-columns:1fr}
+  .about-portrait{display:flex;justify-content:center}
+  .trust-grid{grid-template-columns:1fr}
+  .hamburger{display:flex}
+  .nav-links,.nav-cta{display:none}
+  .hero-stats{gap:1.5rem}
+  .review-steps{gap:1.5rem}
+}
+@media(max-width:600px){
+  .section{padding:4rem 1.5rem}
+  nav{padding:1rem 1.5rem}
+  .trust-badge-row{gap:1.5rem}
+  .about-facts{grid-template-columns:1fr}
+  .series-grid{grid-template-columns:1fr}
+  .email-form{flex-direction:column}
+  .email-btn{padding:0.85rem}
+  footer{flex-direction:column;text-align:center}
+  .footer-links{justify-content:center}
+}
+
+
+
+
+
+/* ── SERIES FULL-WIDTH LAYOUT ───────────────────────── */
+.series-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+  margin-top: 4rem;
+}
+
+.series-card {
+  position: relative;
+  background: var(--navy-mid);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 4rem 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5rem;
+  transition: border-color 0.4s, box-shadow 0.4s;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+}
+
+/* Hover effect */
+.series-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--accent-color, var(--gold)) 0%, transparent 60%);
+  opacity: 0; transition: opacity 0.4s;
+}
+.series-card:hover {
+  border-color: var(--accent-color, var(--gold));
+  box-shadow: 0 20px 48px rgba(0,0,0,0.4);
+}
+.series-card:hover::before { opacity: 0.04; }
+
+/* Alternate the layout for even cards (Books on left, Text on right) */
+.series-card:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.series-card-content {
+  flex: 1;
+  max-width: 600px; /* Gives the text room to breathe without stretching */
+  position: relative;
+  z-index: 2;
+}
+
+/* ── 3D FLASHCARD STACK ──────────────────────────── */
+.series-stack-container {
+  flex: 0 0 40%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+  height: 320px;
+  position: relative;
+  z-index: 2;
+}
+.series-stack {
+  position: relative;
+  width: 170px;
+  height: 255px;
+  transform-style: preserve-3d;
+}
+.stack-cover {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: -6px 12px 32px rgba(0,0,0,0.6), inset 1px 0 0 rgba(255,255,255,0.15);
+  transition: transform 0.7s var(--ease-spring), opacity 0.7s var(--ease-out);
+}
+
+/* Typography Styling */
+.series-number {
+  font-family: var(--font-display); font-size: 5rem; font-weight: 700;
+  line-height: 1; color: rgba(255,255,255,0.04);
+  position: absolute; top: -0.5rem; right: 1rem;
+  transition: color 0.3s; pointer-events: none;
+}
+.series-card:nth-child(even) .series-number { right: auto; left: 1rem; }
+.series-card:hover .series-number { color: rgba(255,255,255,0.07); }
+
+.series-tag {
+  display: inline-block; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.3rem 0.8rem; margin-bottom: 1.2rem;
+  background: rgba(var(--accent-rgb, 201,168,76), 0.15);
+  color: var(--accent-color, var(--gold));
+}
+.series-title { font-family: var(--font-display); font-size: 2rem; font-weight: 600; line-height: 1.25; color: var(--white); margin-bottom: 0.7rem; }
+.series-desc { font-size: 0.95rem; font-weight: 300; line-height: 1.7; color: var(--cream-dim); margin-bottom: 1.5rem; }
+.series-books { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 2rem; }
+.series-book-item { display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.85rem; color: var(--cream-dim); line-height: 1.4; }
+.series-book-item::before { content: ''; width: 6px; height: 6px; margin-top: 0.35rem; flex-shrink: 0; background: var(--accent-color, var(--gold)); }
+.series-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-color, var(--gold)); transition: gap 0.3s; }
+.series-card:hover .series-link { gap: 0.9rem; }
+.series-link svg { transition: transform 0.3s; }
+.series-card:hover .series-link svg { transform: translateX(4px); }
+
+/* ── FREE GUIDES THUMBNAILS & SHARE BUTTONS ──────── */
+.guide-thumb {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.guide-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: auto; /* Pushes buttons to the bottom of the card */
+}
+.share-btn {
+  background: transparent;
+  border: none;
+  color: var(--cream-dim);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.share-btn:hover {
+  color: var(--gold);
+}
+
+/* ── RESPONSIVE FIXES (MOBILE) ────────────────────────────── */
+@media(max-width: 900px) {
+  /* Hide the desktop nav links and show the hamburger */
+  .nav-links, .nav-cta { display: none; }
+  .hamburger { display: flex; }
+  
+  /* ── HERO MOBILE OVERHAUL (THE 3D FAN) ────────────────────────────── */
+@media(max-width: 900px) {
+  .hero { 
+    padding: 7rem 1.5rem 3rem 1.5rem; 
+    height: auto; 
+    min-height: 100svh; 
+
+    background: radial-gradient(circle at 50% 30%, rgba(192, 57, 43, 0.12) 0%, transparent 60%, var(--navy) 100%);
+  }
+  
+  .hero-grid { 
+    grid-template-columns: 1fr; 
+    gap: 1rem; 
+  }
+  
+  /* 1. Center the Text First */
+  .hero-content { 
+    text-align: center; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+  }
+  
+  .hero-eyebrow { margin-bottom: 1rem; }
+  .hero-title { font-size: 2.8rem; line-height: 1.1; margin-bottom: 1rem; }
+  .hero-sub { margin-bottom: 2rem; max-width: 100%; }
+  
+  .hero-stats { 
+    justify-content: center; 
+    width: 100%; 
+    gap: 2rem; 
+    margin-bottom: 2.5rem; 
+  }
+  
+  /* (Add these inside your existing max-width: 900px hero query) */
+  .hero-text-box {
+    padding: 1.2rem 1.5rem;
+    margin: 0 auto 2rem auto;
+    text-align: left; /* Keeps the text highly readable inside the box */
+  }
+  
+  .hero-actions {
+    flex-direction: row; /* Forces buttons side-by-side instead of stacking */
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .btn-primary {
+    padding: 0.8rem 1.5rem; /* Slightly tighter padding for mobile */
+  }
+
+/* 2. The 3D Fan Stage (Pushed ABOVE the text) */
+  .books-stage { 
+    height: 280px; 
+    order: -1; /* CRITICAL: Forces books above the text */
+    width: 100%; 
+    margin-top: 0;
+    margin-bottom: 1.5rem; /* Creates space between the books and the text below */
+    position: relative;
+  }
+  
+  /* The Premium Glowing Backlight */
+  .books-stage::after {
+    content: ''; 
+    position: absolute; 
+    top: 40%; left: 50%;
+    width: 250px; height: 250px; 
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(192, 57, 43, 0.25) 0%, transparent 70%);
+    z-index: 0; 
+    filter: blur(30px); 
+    pointer-events: none;
+  }
+
+  .book-cover { 
+    width: 110px; 
+    height: 155px; 
+  }
+
+  /* 3. The Perfect Fan Positioning & Unique Mobile Animations */
+  #book1 { animation: mFloat1 6s ease-in-out infinite; left: 50%; top: 50%; margin-left: -135px; margin-top: -60px; z-index: 1; }
+  #book2 { animation: mFloat2 7s ease-in-out infinite; left: 50%; top: 50%; margin-left: -95px; margin-top: -80px; z-index: 2; }
+  
+  /* Center Book pops out slightly larger */
+  #book3 { animation: mFloat3 8s ease-in-out infinite; left: 50%; top: 50%; margin-left: -55px; margin-top: -100px; z-index: 5; } 
+  
+  #book4 { animation: mFloat4 6.5s ease-in-out infinite; left: 50%; top: 50%; margin-left: -15px; margin-top: -80px; z-index: 4; }
+  #book5 { animation: mFloat5 7.5s ease-in-out infinite; left: 50%; top: 50%; margin-left: 25px; margin-top: -60px; z-index: 3; }
+  
+  /* Hide the broken scroll hint on mobile */
+  .scroll-hint { display: none; }
+}
+
+/* ── Mobile Keyframes for the Fan (Add to very bottom of style.css) ── */
+@keyframes mFloat1 { 0%,100% { transform: rotateZ(-14deg) rotateY(-15deg) translateY(0); } 50% { transform: rotateZ(-14deg) rotateY(-15deg) translateY(-10px); } }
+@keyframes mFloat2 { 0%,100% { transform: rotateZ(-7deg) rotateY(-10deg) translateY(0); } 50% { transform: rotateZ(-7deg) rotateY(-10deg) translateY(-12px); } }
+@keyframes mFloat3 { 0%,100% { transform: rotateZ(0deg) rotateY(0deg) translateY(0) scale(1.1); } 50% { transform: rotateZ(0deg) rotateY(0deg) translateY(-15px) scale(1.1); } }
+@keyframes mFloat4 { 0%,100% { transform: rotateZ(7deg) rotateY(10deg) translateY(0); } 50% { transform: rotateZ(7deg) rotateY(10deg) translateY(-12px); } }
+@keyframes mFloat5 { 0%,100% { transform: rotateZ(14deg) rotateY(15deg) translateY(0); } 50% { transform: rotateZ(14deg) rotateY(15deg) translateY(-10px); } }
+  /* ── SERIES CARDS: HORIZONTAL APP LAYOUT ── */
+  .series-grid { gap: 1.5rem; margin-top: 2rem; }
+  
+  /* Force side-by-side layout for all cards */
+  .series-card, .series-card:nth-child(even) {
+    flex-direction: row; 
+    padding: 1.5rem; 
+    gap: 1rem;
+    border-radius: 16px;
+    align-items: center;
+  } 
+
+  /* 1. Apply mobile sizing, but keep the alternating layout */
+ /*  .series-card {
+    flex-direction: row; 
+    padding: 1.5rem; 
+    gap: 1rem;
+    border-radius: 16px;
+    align-items: center;
+  }
+  
+  .series-card:nth-child(even) {
+    flex-direction: row-reverse;
+  } */
+  
+  
+  .series-card-content {
+    flex: 1;
+    min-width: 0; /* Allows horizontal scrolling inside the flex child */
+    text-align: left;
+  }
+  
+  .series-tag { margin-bottom: 0.5rem; }
+  .series-title { font-size: 1.35rem; line-height: 1.15; margin-bottom: 0.5rem; }
+  
+  /* Truncate description to 2 lines */
+  .series-desc { 
+    font-size: 0.85rem; 
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Auto-panning Pill Container */
+  .series-books { 
+    display: flex; 
+    flex-direction: row; 
+    overflow-x: auto; 
+    gap: 0.5rem; 
+    margin: 0 0 1.2rem 0; 
+    padding-bottom: 0.5rem; 
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .series-books::-webkit-scrollbar { display: none; } /* Safari/Chrome */
+  
+  /* The Pills */
+  .series-book-item { 
+    flex-shrink: 0; 
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.15); 
+    padding: 0.3rem 0.8rem; 
+    border-radius: 20px; 
+    font-size: 0.7rem; 
+    color: var(--white);
+  }
+  .series-book-item::before { display: none; } /* Hide the desktop bullet */
+  
+  /* Shrink 3D Stage to fit side-by-side */
+  .series-stack-container { 
+    flex: 0 0 110px; 
+    height: 160px; 
+    margin-right: -0.5rem; /* Lets the animation bleed to the right edge slightly */
+  }
+  .series-stack { width: 90px; height: 135px; }
+  
+  /* Hide the large background numbers */
+  .series-number, .series-card:nth-child(even) .series-number { display: none; }
+  
+  .series-link { justify-content: flex-start; }
+
+  /* Adjust other sections */
+  .trust-grid { grid-template-columns: 1fr; }
+  .trust-badge-row { gap: 1.5rem; }
+  .review-steps { gap: 1.5rem; }
+  .email-form { flex-direction: column; }
+  .email-btn { padding: 0.85rem; }
+  footer { flex-direction: column; text-align: center; }
+  .footer-links { justify-content: center; }
+}
+
+
+
+
+
+
+
+
+/* ── REVIEW CTA SECTION ────────────────────────── */
+.review-cta-section {
+  padding: 4rem 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.review-cta-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(201, 168, 76, 0.3); /* Subtle gold border */
+  border-radius: 16px;
+  padding: 2.5rem 3rem;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.cta-icon {
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.1em;
+}
+
+.cta-text {
+  flex: 1; /* Pushes the button to the right on desktop */
+}
+
+.cta-text h3 {
+  font-size: 1.4rem;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.cta-text p {
+  font-size: 0.95rem;
+  color: var(--cream-dim);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.cta-btn {
+  white-space: nowrap;
+  padding: 1rem 2rem;
+  flex-shrink: 0;
+}
+
+/* ── MOBILE OPTIMIZATION (COMPACT LAYOUT) ── */
+@media (max-width: 900px) {
+  .review-cta-section {
+    padding: 3rem 1.5rem;
+  }
+  
+  .review-cta-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    padding: 2rem 1.5rem; /* Tighter padding saves vertical space */
+  }
+  
+  .cta-icon {
+    font-size: 2.5rem;
+    margin-bottom: -0.5rem; /* Pulls the icon closer to the text */
+  }
+  
+  .cta-btn {
+    width: 100%; /* Full-width button for easy thumb-tapping */
+    justify-content: center;
+  }
+}
+
+
+
+
+
+
+
+/* ── TWO-STEP REVIEW MODAL STYLES ────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: var(--navy);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 20px;
+  padding: 2.5rem;
+  max-width: 500px; /* Kept tight so the buttons don't stretch too far */
+  width: 90%;
+  position: relative;
+  transform: scale(0.95) translateY(20px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-overlay.active .modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem; right: 1.5rem;
+  background: none; border: none;
+  color: var(--cream-dim); font-size: 2rem;
+  cursor: pointer; line-height: 1; z-index: 10;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--gold);
+}
+
+.modal-header {
+  text-align: center;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  color: var(--gold);
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-sub {
+  color: var(--cream-dim);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── TWO-STEP SLIDER LOGIC ── */
+.modal-slider-viewport {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  margin-top: 1.5rem;
+  /* Adds a smooth Apple-style animation to the height changes */
+  transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+}
+
+.modal-slider-track {
+  display: flex;
+  width: 200%;
+  /* CRITICAL: align-items flex-start stops Step 1 from stretching to match Step 2 */
+  align-items: flex-start; 
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.modal-view {
+  width: 50%; /* Takes exactly half of the 200% track */
+  flex-shrink: 0;
+  padding: 0 0.5rem;
+}
+
+/* ── STEP 1: SERIES BUTTONS ── */
+.series-button-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.modal-series-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-series-btn:hover {
+  border-color: var(--gold);
+  background: rgba(201, 168, 76, 0.1);
+}
+
+/* ── STEP 2: BACK BUTTON & BOOK GRID ── */
+.modal-back-btn {
+  background: none; border: none;
+  color: var(--gold); cursor: pointer;
+  font-size: 0.9rem; padding: 0;
+  margin-bottom: 1rem;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+
+.book-group {
+  display: none; /* Hide all groups initially */
+}
+
+.book-group.active-group {
+  display: grid; /* Show only the active one */
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 1rem;
+  justify-content: center;
+}
+
+.modal-book-cover {
+  width: 100%;
+  border-radius: 6px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  transition: transform 0.2s ease;
+}
+
+.modal-book:hover .modal-book-cover {
+  transform: translateY(-5px);
+}
+
+@media(max-width: 600px) {
+  .modal-content { padding: 2rem 1.5rem; }
+}
+
+
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   PRE-LAUNCH FIXES
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── TOAST ─────────────────────────────────────────────────────────── */
+.toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  z-index: 10000;          /* above the noise overlay (9999) */
+  width: min(92vw, 460px);
+  pointer-events: none;
+}
+
+.toast {
+  display: block;
+  background: rgba(22, 37, 56, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(201, 168, 76, 0.28);
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 0.95rem 1.25rem;
+  color: var(--cream);
+  font-size: 0.86rem;
+  font-weight: 300;
+  line-height: 1.5;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.35s var(--ease-out), transform 0.35s var(--ease-out);
+  word-break: break-word;
+}
+
+.toast.is-visible { opacity: 1; transform: translateY(0); }
+
+.toast--success { border-left-color: var(--dash); }
+.toast--error   { border-left-color: var(--heart); }
+.toast--info    { border-left-color: var(--gold); }
+
+@media(max-width: 600px) {
+  .toast-host { bottom: 1rem; width: calc(100vw - 2rem); }
+}
+
+/* ── HAMBURGER IS NOW A <button> ────────────────────────────────────── */
+/* It was a <div>, so it was invisible to keyboards and screen readers.
+   These rules strip the default button chrome so it looks identical. */
+button.hamburger {
+  background: none;
+  border: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+@media(max-width: 900px) {
+  button.hamburger { display: flex; }
+}
+
+/* ── VISIBLE KEYBOARD FOCUS ─────────────────────────────────────────── */
+/* Nothing in the original showed a focus ring, so the site was unusable
+   by keyboard. :focus-visible keeps mouse users from ever seeing it. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ── EMPTY STATES IN THE REVIEW MODAL ───────────────────────────────── */
+.book-group.is-empty.active-group {
+  display: block;
+  text-align: center;
+}
+
+.modal-empty {
+  font-size: 0.9rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--cream-dim);
+  padding: 1.5rem 0.5rem;
+}
+
+/* ── FOOTER DISCLAIMER ──────────────────────────────────────────────── */
+/* A health site giving blood-pressure guidance needs this visible. */
+.footer-disclaimer {
+  font-size: 0.68rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--cream-dim);
+  opacity: 0.45;
+  max-width: 620px;
+  margin: 0.75rem 0;
+}
+@media(max-width: 900px) {
+  .footer-disclaimer { margin: 0.75rem auto; text-align: center; }
+}
+
+/* ── REDUCED MOTION ─────────────────────────────────────────────────── */
+/* The global rule only neutralised animation/transition duration; the
+   loader relies on an animation ending to reveal its text, and the
+   custom cursor is pure motion. Handle both explicitly. */
+@media(prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .loader-text { opacity: 1 !important; animation: none !important; }
+  .cursor, .cursor-ring { display: none !important; }
+  .hero-eyebrow,
+  .hero-title,
+  .premium-hero-intro,
+  .hero-actions { opacity: 1 !important; animation: none !important; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .asset-card.is-highlighted { animation: none !important; }
+}

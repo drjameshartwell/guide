@@ -1,0 +1,21 @@
+DROP THE GUIDE PDF IN THIS FOLDER
+=================================
+
+The site expects one file here:
+
+    guides/blood-pressure-turnaround.pdf
+
+If your PDF has a different name, you have two options:
+
+  A) Rename your file to  blood-pressure-turnaround.pdf   (easiest), or
+  B) Open index.html, find the line:
+
+         data-file="guides/blood-pressure-turnaround.pdf"
+
+     and change it to your actual filename.
+
+Until a real file is sitting here, clicking "Download the guide" will
+try to fetch a file that doesn't exist and the browser will 404.
+Test it once locally before you deploy.
+
+You can delete this .txt file once the PDF is in place.

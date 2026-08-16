@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# TODO: swap in your real domain
+Sitemap: https://drjameshartwell.com/sitemap.xml

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. James Hartwell — Health Guides That Change How You Live</title>
+
+<meta name="description" content="Practical, evidence-based health guides from Dr. James Hartwell. Blood pressure, the DASH diet, heart-healthy meal prep and mental health journals — written for real people, not medical journals.">
+<meta name="author" content="Dr. James Hartwell">
+<meta name="theme-color" content="#0D1B2A">
+
+<!-- Canonical points at the real domain, which is bought but not yet pointed
+     at GitHub Pages. Harmless while DNS propagates — search engines simply
+     take longer to index. Leave as-is. -->
+<link rel="canonical" href="https://drjameshartwell.com/">
+
+<!-- Open Graph / Facebook — this is what renders when the link is shared.
+     ─────────────────────────────────────────────────────────────────────
+     og:url and og:image deliberately point at the GITHUB PAGES url, not the
+     custom domain. Facebook fetches og:image over the network to build the
+     preview card; pointing it at drjameshartwell.com before DNS resolves
+     means no thumbnail, and og:url would make the preview link to a domain
+     that isn't serving yet.
+
+     ONCE DNS IS LIVE: swap the three github.io urls below back to
+     https://drjameshartwell.com/ and re-scrape the link at
+     developers.facebook.com/tools/debug/ to clear Facebook's cache.
+     ───────────────────────────────────────────────────────────────────── -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dr. James Hartwell">
+<meta property="og:title" content="Dr. James Hartwell — Health Guides That Change How You Live">
+<meta property="og:description" content="Free clinical cheat sheets and evidence-based guides on blood pressure, the DASH diet and heart health. No jargon — just the exact steps.">
+<meta property="og:url" content="https://drjameshartwell.github.io/guide/">
+<meta property="og:image" content="https://drjameshartwell.github.io/guide/homage/i2.webp">
+<meta property="og:image:alt" content="Dr. James Hartwell">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dr. James Hartwell — Health Guides That Change How You Live">
+<meta name="twitter:description" content="Free clinical cheat sheets and evidence-based guides on blood pressure, the DASH diet and heart health.">
+<meta name="twitter:image" content="https://drjameshartwell.github.io/guide/homage/i2.webp">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<!-- Loader fallback: if JS fails or is blocked, the overlay must not trap the page -->
+<noscript><style>#loader{display:none!important}.reveal{opacity:1!important;transform:none!important}</style></noscript>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Dr. James Hartwell",
+  "jobTitle": "Author & Health Researcher",
+  "description": "Author of practical, evidence-based health guides on blood pressure, the DASH diet and heart health.",
+  "url": "https://drjameshartwell.com/"
+}
+</script>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-text">Dr. James Hartwell</div>
+</div>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#top" class="nav-logo">Dr. James Hartwell</a>
+  <a href="#series" class="nav-cta">Browse Books</a>
+  <button class="hamburger" id="hamburger" type="button"
+          aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU (single source of truth — the nav previously held a duplicate #mobileMenu) -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#series" onclick="closeMobileMenu()">Series</a>
+  <a href="#about" onclick="closeMobileMenu()">About</a>
+  <a href="#reviews" onclick="closeMobileMenu()">Reviews</a>
+  <a href="#guides" onclick="closeMobileMenu()">Free Guides</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid">
+    <div class="hero-content">
+      <p class="hero-eyebrow">Author &amp; Health Researcher</p>
+      <h1 class="hero-title">
+        Books that <em>change</em><br>how you live.
+      </h1>
+      
+<!-- The Premium Editorial Intro -->
+      <div class="premium-hero-intro">
+        <p class="intro-text">
+          <span class="intro-highlight">Healing starts with clarity.</span> 
+          I write practical, no-nonsense guides that cut through the noise—giving you the exact steps you need to take control of your health today.
+        </p>
+      </div>
+      
+      <!-- Streamlined Actions (No Stats, No Stacked Buttons) -->
+      <div class="hero-actions">
+        <a href="#series" class="btn-primary">
+          Browse Library
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#about" class="btn-text-link">Meet Dr. Hartwell &rarr;</a>
+      </div>
+    </div>
+    <!-- FLOATING BOOKS -->
+    <div class="books-stage" id="booksStage" aria-hidden="true">
+      <!-- Decorative cover carousel. Only book1–book5 are driven by initHeroSwapper();
+           books 6–9 sit behind as static depth. IDs must stay unique. -->
+      <div class="book-float" id="book1">
+        <img src="books/h1.webp" alt="" class="book-cover" width="300" height="450" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book2">
+        <img src="books/m1.jpg" alt="" class="book-cover" width="300" height="450" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book3">
+        <img src="books/h2.webp" alt="" class="book-cover" width="300" height="450" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book4">
+        <img src="books/m2.jpg" alt="" class="book-cover" width="300" height="450" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book5">
+        <img src="books/h3.webp" alt="" class="book-cover" width="300" height="450" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book6">
+        <img src="books/m3.jpg" alt="" class="book-cover" width="300" height="450" loading="lazy" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book7">
+        <img src="books/h5.webp" alt="" class="book-cover" width="300" height="450" loading="lazy" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book8">
+        <img src="books/m4.jpg" alt="" class="book-cover" width="300" height="450" loading="lazy" style="padding:0;object-fit:cover;">
+      </div>
+
+      <div class="book-float" id="book9">
+        <img src="books/m5.jpg" alt="" class="book-cover" width="300" height="450" loading="lazy" style="padding:0;object-fit:cover;">
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- PHILOSOPHY MARQUEE -->
+<div class="philosophy-strip">
+  <div class="marquee-track" id="marquee">
+    <span class="marquee-item">"Knowledge is the beginning of all healing" <span class="dot">✦</span></span>
+    <span class="marquee-item">Evidence-Based <span class="dot">✦</span></span>
+    <span class="marquee-item">Written for Real People <span class="dot">✦</span></span>
+    <span class="marquee-item">"The best time to start was yesterday. The next best time is now." <span class="dot">✦</span></span>
+    <span class="marquee-item">Practical. Compassionate. Clear. <span class="dot">✦</span></span>
+    <span class="marquee-item">5 Series — One Mission <span class="dot">✦</span></span>
+    <span class="marquee-item">"Information that changes how you live" <span class="dot">✦</span></span>
+    <span class="marquee-item">Available Worldwide on Amazon <span class="dot">✦</span></span>
+    <!-- Duplicate for seamless loop -->
+    <span class="marquee-item">"Knowledge is the beginning of all healing" <span class="dot">✦</span></span>
+    <span class="marquee-item">Evidence-Based <span class="dot">✦</span></span>
+    <span class="marquee-item">Written for Real People <span class="dot">✦</span></span>
+    <span class="marquee-item">"The best time to start was yesterday. The next best time is now." <span class="dot">✦</span></span>
+    <span class="marquee-item">Practical. Compassionate. Clear. <span class="dot">✦</span></span>
+    <span class="marquee-item">5 Series — One Mission <span class="dot">✦</span></span>
+    <span class="marquee-item">"Information that changes how you live" <span class="dot">✦</span></span>
+    <span class="marquee-item">Available Worldwide on Amazon <span class="dot">✦</span></span>
+  </div>
+</div>
+
+<!-- ABOUT THE AUTHOR (SOCIAL PROOF & AUTO-SCROLL) -->
+<section class="section about-modern" id="about">
+  <div class="section-inner about-wrapper">
+    
+    <!-- Visual Side: Facebook Social Proof -->
+    <div class="about-visual reveal">
+      <div class="fb-proof-card">
+        <div class="fb-proof-header">
+          <div class="fb-dots"><span></span><span></span><span></span></div>
+          <span class="fb-url">facebook.com/drjameshartwell</span>
+        </div>
+        <!-- Using your exact screenshot filename -->
+        <img src="homage/i2.webp" alt="Dr. James Hartwell's Facebook page" class="fb-screenshot" loading="lazy" decoding="async">
+        <!-- TODO: paste your Facebook page URL here, then delete data-pending -->
+        <a href="https://www.facebook.com/drjameshartwell" class="fb-follow-btn" >Connect on Facebook</a>
+      </div>
+    </div>
+
+    <!-- Text Side -->
+    <div class="about-content">
+      <p class="section-eyebrow reveal">Meet the Author</p>
+      <h2 class="section-title reveal reveal-delay-1">Making complex science <em>human.</em></h2>
+      
+      <div class="about-letter reveal reveal-delay-2">
+        <p>Hi, I'm Dr. James Hartwell.</p>
+        <p>I started writing these guides because I realized the gap between clinical research and your daily life is simply too wide.</p>
+        <p>Drawing from a rigorous foundation in medicine and surgery, my mission is to strip away the medical jargon. I don't write for medical journals—I write for real people looking for real, actionable steps to reclaim their health. Knowledge is only powerful if you actually know what to do with it.</p>
+      </div>
+
+      <!-- Auto-Panning Principles Marquee -->
+      <div class="principles-container reveal reveal-delay-3">
+        <div class="about-principles-track" id="principlesTrack">
+          
+          <div class="principle-card">
+            <div class="p-icon-wrapper"><span class="p-icon">🎯</span></div>
+            <h4>The Mission</h4>
+            <p>Put the right information in the right hands—clearly.</p>
+          </div>
+          
+          <div class="principle-card">
+            <div class="p-icon-wrapper"><span class="p-icon">🔬</span></div>
+            <h4>The Science</h4>
+            <p>Every claim cites peer-reviewed research. No fads.</p>
+          </div>
+          
+          <div class="principle-card">
+            <div class="p-icon-wrapper"><span class="p-icon">✍️</span></div>
+            <h4>The Style</h4>
+            <p>Warm, precise, and written like a knowledgeable friend.</p>
+          </div>
+          
+          <div class="principle-card">
+            <div class="p-icon-wrapper"><span class="p-icon">🤝</span></div>
+            <h4>The Promise</h4>
+            <p>You will finish every book knowing exactly what to do next.</p>
+          </div>
+
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- SERIES -->
+<section class="section" id="series">
+  <div class="section-inner">
+    <p class="section-eyebrow reveal">Complete Library</p>
+    <h2 class="section-title reveal reveal-delay-1">Five series. <em>One vision.</em></h2>
+    <p class="section-body reveal reveal-delay-2">Each series is a complete journey — not just a single book. Start with Book 1 and build your knowledge across the series.</p>
+
+<div class="series-grid" id="seriesGrid">
+
+<!-- 01: HEART HEALTH -->
+      <a class="series-card reveal" href="#" onclick="return false;"
+         style="--accent-color:var(--heart);--accent-rgb:192,57,43">
+        <div class="series-card-content">
+          <div class="series-number">01</div>
+          <div class="series-tag">Heart Health</div>
+          <h3 class="series-title">The Heart Health Beginners Series</h3>
+          <p class="series-desc">From blood pressure to the DASH diet to heart-healthy meal prep — a complete cardiovascular wellness library for beginners.</p>
+          <div class="series-books">
+            <span class="series-book-item" style="--accent-color:var(--heart)">Reducing High Blood Pressure for Beginners ✓</span>
+            <span class="series-book-item" style="--accent-color:var(--heart)">The DASH Diet for Beginners ✓</span>
+            <span class="series-book-item" style="--accent-color:var(--heart)">Heart-Healthy Meal Prep for Beginners ✓</span>
+            <span class="series-book-item" style="--accent-color:var(--heart)">Managing Diabetes & Blood Pressure Together ✓</span>
+            <span class="series-book-item" style="--accent-color:var(--heart)">Stress-Free Living for a Healthier Heart ✓</span>
+          </div>
+          <span class="series-link" style="color:var(--heart)">
+            Browse Series <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        
+        <!-- THE NEW 3D STACK -->
+        <div class="series-stack-container">
+          <div class="series-stack">
+            <!-- Add as many covers as you want here. The JS will handle them automatically. -->
+            <img src="books/h1.webp" alt="Reducing High Blood Pressure" class="stack-cover">
+            <img src="books/h2.webp" alt="The DASH Diet" class="stack-cover">
+            <img src="books/h3.webp" alt="Heart-Healthy Meal Prep" class="stack-cover">
+            <img src="books/h4.webp" alt="Managing Diabetes & Blood Pressure" class="stack-cover">
+            <img src="books/h5.webp" alt="Stress-Free Living" class="stack-cover">
+          </div>
+        </div>
+      </a>
+
+<!-- 02: MEDITERRANEAN DIET -->
+      <a class="series-card reveal reveal-delay-1" href="#" onclick="return false;"
+         style="--accent-color:var(--dash);--accent-rgb:26,107,60">
+        <div class="series-card-content">
+          <div class="series-number">02</div>
+          <div class="series-tag">Diet & Nutrition</div>
+          <h3 class="series-title">The Mediterranean Diet Series</h3>
+          <p class="series-desc">Evidence-based guides and meal plans built around one of the world's most researched diets for cardiovascular longevity.</p>
+          <div class="series-books">
+            <span class="series-book-item" style="--accent-color:var(--dash)">5-Book Series — In Development</span>
+          </div>
+          <span class="series-link" style="color:var(--dash)">
+            Browse Series <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        
+        <!-- THE NEW 3D STACK -->
+        <div class="series-stack-container">
+          <div class="series-stack">
+            <img src="books/m1.jpg" alt="Mediterranean Diet Book 1" class="stack-cover">
+            <img src="books/m2.jpg" alt="Mediterranean Diet Book 2" class="stack-cover">
+            <img src="books/m3.jpg" alt="Mediterranean Diet Book 3" class="stack-cover">
+            <img src="books/m4.jpg" alt="Mediterranean Diet Book 4" class="stack-cover">
+            <img src="books/m5.jpg" alt="Mediterranean Diet Book 5" class="stack-cover">
+          </div>
+        </div>
+      </a>
+
+      <!-- 03: CLINICAL TRACKERS & TOOLS -->
+      <a class="series-card reveal reveal-delay-2" href="#" onclick="return false;"
+         style="--accent-color:var(--ai);--accent-rgb:8,145,178">
+        <div class="series-card-content">
+          <div class="series-number">03</div>
+          <div class="series-tag">Practical Tools</div>
+          <h3 class="series-title">Clinical Trackers & Logbooks</h3>
+          <p class="series-desc">Stop guessing with your daily numbers. Purpose-built logbooks, monitoring guides, and daily trackers to take control of your health data.</p>
+          <div class="series-books">
+            <span class="series-book-item" style="--accent-color:var(--ai)">Blood Pressure Home Monitor Guide</span>
+            <span class="series-book-item" style="--accent-color:var(--ai)">Daily Blood Pressure 52-Week Log Book</span>
+            <span class="series-book-item" style="--accent-color:var(--ai)">Medication & Symptom Tracker (Coming Soon)</span>
+          </div>
+          <span class="series-link" style="color:var(--ai)">
+            Browse Tools <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        
+        <!-- THE NEW 3D STACK -->
+        <div class="series-stack-container">
+          <div class="series-stack">
+            <img src="books/log1.jpg" alt="Blood Pressure Home Monitor Guide" class="stack-cover">
+            <img src="books/log1.jpg" alt="Daily Blood Pressure 52-Week Log Book" class="stack-cover">
+            <img src="books/log1.jpg" alt="Medication & Symptom Tracker" class="stack-cover">
+          </div>
+        </div>
+      </a>
+
+      <!-- 04: MENTAL HEALTH -->
+      <a class="series-card reveal reveal-delay-1" href="#" onclick="return false;"
+         style="--accent-color:var(--mind);--accent-rgb:107,63,160">
+        <div class="series-card-content">
+          <div class="series-number">04</div>
+          <div class="series-tag">Mental Health</div>
+          <h3 class="series-title">Mental Health Journals (Specific)</h3>
+          <p class="series-desc">Targeted therapeutic journals for specific mental health challenges — anxiety, grief, depression, self-esteem — each with structured prompts backed by CBT research.</p>
+          <div class="series-books">
+            <span class="series-book-item" style="--accent-color:var(--mind)">The Anxiety Relief Journal</span>
+            <span class="series-book-item" style="--accent-color:var(--mind)">Healing Through Grief Journal</span>
+            <span class="series-book-item" style="--accent-color:var(--mind)">The Self-Worth Rebuilding Journal</span>
+          </div>
+          <span class="series-link" style="color:var(--mind)">
+            Browse Series <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        
+        <!-- THE NEW 3D STACK -->
+        <div class="series-stack-container">
+          <div class="series-stack">
+            <img src="books/a1.webp" alt="The Anxiety Relief Journal" class="stack-cover">
+
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- TRUST / REVIEWS -->
+<section class="section trust-section" id="reviews">
+  <div class="section-inner">
+    <p class="section-eyebrow reveal" style="text-align: center;">Reader Stories & Milestones</p>
+    <h2 class="section-title reveal reveal-delay-1" style="text-align: center;">Real people. <em>Real results.</em></h2>
+
+    <!-- The Infinite Image Reel -->
+<div class="review-reel-container reveal reveal-delay-2">
+      <div class="review-reel">
+        
+        <!-- GROUP 1: Put all your unique images here -->
+        <div class="review-group">
+          <img src="reviews/rv1.webp" alt="#1 Amazon Best Seller" class="review-img"   loading="lazy" decoding="async">
+          <img src="reviews/rv2.webp" alt="Reader Facebook Comment" class="review-img"   loading="lazy" decoding="async">
+          <img src="reviews/rv3.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">
+          <img src="reviews/rv4.webp" alt="Reader Facebook Comment" class="review-img"   loading="lazy" decoding="async">          
+          <img src="reviews/rv5.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv6.webp" alt="Reader Facebook Comment" class="review-img"   loading="lazy" decoding="async">          
+          <img src="reviews/rv7.webp" alt="Reader Facebook Comment" class="review-img"   loading="lazy" decoding="async">          
+                   
+          <img src="reviews/rv9.webp" alt="Reader Facebook Comment" class="review-img"   loading="lazy" decoding="async">          
+          <img src="reviews/rv10.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv11.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv12.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv13.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv14.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv15.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv16.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv17.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv18.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv19.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv20.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">          
+          <img src="reviews/rv21.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">
+          <img src="reviews/rv22.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">
+          <img src="reviews/rv23.webp" alt="Reader Facebook Comment" class="review-img"  loading="lazy" decoding="async">
+          <!-- Add as many new images as you want right here -->
+        </div>
+        
+        <!-- GROUP 2: EXACT duplicate of Group 1 (This is what makes it seamless) -->
+        <div class="review-group" aria-hidden="true">
+          <img src="reviews/rv1.webp" alt="#1 Amazon Best Seller" class="review-img">
+          <img src="reviews/rv2.webp" alt="Reader Facebook Comment" class="review-img">
+          <img src="reviews/rv3.webp" alt="Reader Facebook Comment" class="review-img">
+          <img src="reviews/rv4.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv5.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv6.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv7.webp" alt="Reader Facebook Comment" class="review-img">          
+                   
+          <img src="reviews/rv9.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv10.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv11.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv12.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv13.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv14.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv15.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv16.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv17.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv18.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv19.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv20.webp" alt="Reader Facebook Comment" class="review-img">          
+          <img src="reviews/rv21.webp" alt="Reader Facebook Comment" class="review-img">
+          <img src="reviews/rv22.webp" alt="Reader Facebook Comment" class="review-img">
+          <img src="reviews/rv23.webp" alt="Reader Facebook Comment" class="review-img">
+          <!-- Add as many new images as you want right here -->
+        </div>
+        <!-- Group 2 must stay an exact duplicate of Group 1, in the same order -->
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEW CTA SECTION -->
+<section class="section review-cta-section">
+  <div class="review-cta-card reveal">
+    <div class="cta-icon">⭐⭐⭐⭐⭐</div>
+    <div class="cta-text">
+      <h3>Your review is a lifeline.</h3>
+      <p>If these guides helped you, a short review helps others find the clarity they need. It takes 60 seconds and means the world.</p>
+    </div>
+    <button id="openReviewBtn" class="btn-primary cta-btn">Leave a Review</button>
+  </div>
+</section>
+
+
+<!-- FREE CLINICAL GUIDES (PREMIUM ASSET LIBRARY) -->
+<section class="section guides-section" id="guides">
+  <div class="section-inner">
+    <div class="guides-header reveal">
+      <p class="section-eyebrow" style="text-align: center;">Free Clinical Assets</p>
+      <h2 class="section-title" style="text-align: center;">Download the <em>cheat sheets.</em></h2>
+      <p class="section-body" style="text-align: center; margin: 0 auto;">High-signal, zero-fluff clinical guides. Free to download — no email address required.</p>
+    </div>
+
+    <div class="premium-asset-grid reveal reveal-delay-1">
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           ASSET 1 — THE ONLY LIVE GUIDE. Downloads directly, no email gate.
+           TO GO LIVE YOU MUST DO TWO THINGS:
+             1. Drop the PDF into  guides/  in this folder.
+             2. Put its exact filename in  data-file  below.
+           Everything else (button, toast, share, counter) already works.
+           The title/description/bullets below are placeholders written to be
+           safe — swap them for the real story from your Facebook post. Do not
+           leave invented numbers or names in a health claim.
+      ═══════════════════════════════════════════════════════════════════ -->
+      <article class="asset-card is-live is-featured" id="guide-bp-turnaround"
+               data-guide="bp-turnaround"
+               data-file="guides/The-5-things-guide.pdf"
+               data-title="The Blood Pressure Turnaround">
+        <div class="asset-head">
+          <div class="asset-media">
+          <img src="books/h1.webp" alt="Cover of The Blood Pressure Turnaround" class="asset-thumb" width="300" height="450" loading="lazy" decoding="async">
+          <span class="asset-status asset-status--live">Available now</span>
+          </div>
+          <div class="asset-headline">
+            <div class="asset-meta">
+            <span class="asset-chip asset-chip--format">PDF</span>
+            <span class="asset-chip">12 pages</span>
+            <span class="asset-chip">~9 min read</span>
+            <span class="asset-chip">Free</span>
+            </div>
+            <h3 class="asset-title">The Blood Pressure Turnaround</h3>
+          </div>
+        </div>
+
+        <div class="asset-body">
+          <p class="asset-desc">The guide so many of you asked for after the Facebook post — the full, step-by-step account of how one reader brought her blood pressure down, written out properly instead of buried in a comment thread.</p>
+
+          <div class="asset-inside">
+            <button type="button" class="asset-inside-toggle" aria-expanded="false">
+              <span>What's inside</span>
+              <svg class="asset-inside-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <p class="asset-inside-label">What's inside</p>
+            <div class="asset-inside-body">
+              <ul class="asset-inside-list">
+              <li>The exact week-by-week sequence she followed</li>
+              <li>What to measure, when to measure it, and what the numbers mean</li>
+              <li>The three most common mistakes that stall progress</li>
+              <li>A one-page checklist you can print and stick on the fridge</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="asset-disclaimer">Educational material only — not a substitute for your doctor's advice. Never change prescribed medication without speaking to your clinician.</p>
+        </div>
+
+        <div class="asset-actions">
+          <button type="button" class="btn-primary asset-btn" data-action="download">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download the guide
+          </button>
+          <button type="button" class="asset-share" data-action="share" aria-label="Share The Blood Pressure Turnaround" title="Share this guide">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- ASSET 2 — not written yet. Locked: shows a toast, never a fake success. -->
+      <article class="asset-card is-locked" id="guide-vagus"
+               data-guide="vagus"
+               data-title="The Vagus Nerve Reset">
+        <div class="asset-head">
+          <div class="asset-media">
+          <img src="books/h2.webp" alt="Cover of The Vagus Nerve Reset" class="asset-thumb" width="300" height="450" loading="lazy" decoding="async">
+          <span class="asset-status asset-status--soon">In writing</span>
+          </div>
+          <div class="asset-headline">
+            <div class="asset-meta">
+            <span class="asset-chip asset-chip--format">PDF</span>
+            <span class="asset-chip">Coming soon</span>
+            </div>
+            <h3 class="asset-title">The Vagus Nerve Reset</h3>
+          </div>
+        </div>
+
+        <div class="asset-body">
+          <p class="asset-desc">A short breathing protocol built around the 5-to-6 breaths per minute range, and the physiology of why that particular pace affects blood vessel tone.</p>
+
+          <div class="asset-inside">
+            <button type="button" class="asset-inside-toggle" aria-expanded="false">
+              <span>Planned contents</span>
+              <svg class="asset-inside-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <p class="asset-inside-label">Planned contents</p>
+            <div class="asset-inside-body">
+              <ul class="asset-inside-list">
+              <li>The breathing pace, and how to hit it without a timer</li>
+              <li>What actually happens in the body at that rate</li>
+              <li>When it helps — and when it does nothing</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="asset-actions">
+          <button type="button" class="btn-primary asset-btn" data-action="locked" aria-disabled="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Not ready yet
+          </button>
+          <button type="button" class="asset-share" data-action="share" aria-label="Share The Vagus Nerve Reset" title="Share this guide">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- ASSET 3 — not written yet. Locked. -->
+      <article class="asset-card is-locked" id="guide-cortisol"
+               data-guide="cortisol"
+               data-title="Breaking the Cortisol Chain">
+        <div class="asset-head">
+          <div class="asset-media">
+          <img src="books/h3.webp" alt="Cover of Breaking the Cortisol Chain" class="asset-thumb" width="300" height="450" loading="lazy" decoding="async">
+          <span class="asset-status asset-status--soon">In writing</span>
+          </div>
+          <div class="asset-headline">
+            <div class="asset-meta">
+            <span class="asset-chip asset-chip--format">PDF</span>
+            <span class="asset-chip">Coming soon</span>
+            </div>
+            <h3 class="asset-title">Breaking the Cortisol Chain</h3>
+          </div>
+        </div>
+
+        <div class="asset-body">
+          <p class="asset-desc">How chronic stress reaches the arteries — the actual chain of events, laid out plainly — and the points along it where you can realistically intervene.</p>
+
+          <div class="asset-inside">
+            <button type="button" class="asset-inside-toggle" aria-expanded="false">
+              <span>Planned contents</span>
+              <svg class="asset-inside-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <p class="asset-inside-label">Planned contents</p>
+            <div class="asset-inside-body">
+              <ul class="asset-inside-list">
+              <li>The stress-to-artery pathway, step by step</li>
+              <li>Which links in the chain you can actually break</li>
+              <li>What the evidence supports — and what it doesn't</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="asset-actions">
+          <button type="button" class="btn-primary asset-btn" data-action="locked" aria-disabled="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Not ready yet
+          </button>
+          <button type="button" class="asset-share" data-action="share" aria-label="Share Breaking the Cortisol Chain" title="Share this guide">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          </button>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Dr. James Hartwell</div>
+  <p class="footer-note">© <span id="footerYear">2026</span> Dr. James Hartwell. All rights reserved.</p>
+  <p class="footer-disclaimer">
+    The content on this site is for general education and is not medical advice.
+    It does not replace consultation with a qualified clinician. Never start, stop
+    or change medication based on anything you read here.
+  </p>
+  <div class="footer-links">
+    <!-- TODO: paste your real URLs. Links with data-pending are inert until then. -->
+    <a href="#" data-pending>Privacy</a>
+    <a href="https://amazon.com/author/drjameshartwell" target="_blank">Amazon Author Page</a>
+    <a href="#guides">Free Guides</a>
+  </div>
+</footer>
+
+
+<!-- ── THE TWO-STEP REVIEW MODAL ── -->
+<div id="reviewModal" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="reviewModalTitle" aria-hidden="true">
+  <div class="modal-content">
+    <button id="closeReviewBtn" class="modal-close" type="button" aria-label="Close">&times;</button>
+    
+    <!-- Viewport hides the overflow so we can slide views inside it -->
+    <div class="modal-slider-viewport">
+      
+      <!-- The track that actually slides left and right -->
+      <div class="modal-slider-track" id="modalTrack">
+        
+        <!-- STEP 1: SELECT SERIES -->
+        <div class="modal-view step-1">
+          <div class="modal-header">
+            <h3 class="modal-title" id="reviewModalTitle">Which series did you read?</h3>
+            <p class="modal-sub">Select a category to find your guide.</p>
+          </div>
+          <div class="series-button-stack">
+            <button class="modal-series-btn" type="button" data-target="heart-books">Heart Health Series &rarr;</button>
+            <button class="modal-series-btn" type="button" data-target="med-books">Mediterranean Diet Series &rarr;</button>
+            <button class="modal-series-btn" type="button" data-target="mental-books">Mental Health &amp; Trackers &rarr;</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: SELECT BOOK (Dynamically swaps content based on Step 1) -->
+        <div class="modal-view step-2">
+          <button class="modal-back-btn" id="modalBackBtn" type="button">&larr; Back to Series</button>
+          <div class="modal-header">
+            <h3 class="modal-title">Which specific guide?</h3>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               Covers now come from your own /books folder — the old markup
+               pulled every cover from placehold.co, an external CDN that
+               would have shown grey placeholder boxes on the live site.
+
+               TO FINISH: put each book's Amazon review URL in href and
+               delete data-pending from that link. Links still carrying
+               data-pending are inert and show a toast instead of 404-ing.
+          ════════════════════════════════════════════════════════════════ -->
+          <div class="modal-books-grid book-group" id="heart-books">
+            <a href="#" data-pending target="_blank" rel="noopener noreferrer" class="modal-book" data-book="Reducing High Blood Pressure for Beginners">
+              <img src="books/h1.webp" alt="Reducing High Blood Pressure for Beginners" class="modal-book-cover" width="200" height="300" loading="lazy">
+            </a>
+            <a href="#" data-pending target="_blank" rel="noopener noreferrer" class="modal-book" data-book="The DASH Diet for Beginners">
+              <img src="books/h2.webp" alt="The DASH Diet for Beginners" class="modal-book-cover" width="200" height="300" loading="lazy">
+            </a>
+            <a href="#" data-pending target="_blank" rel="noopener noreferrer" class="modal-book" data-book="Heart-Healthy Meal Prep for Beginners">
+              <img src="books/h3.webp" alt="Heart-Healthy Meal Prep for Beginners" class="modal-book-cover" width="200" height="300" loading="lazy">
+            </a>
+            <a href="#" data-pending target="_blank" rel="noopener noreferrer" class="modal-book" data-book="Managing Diabetes &amp; Blood Pressure Together">
+              <img src="books/h4.webp" alt="Managing Diabetes and Blood Pressure Together" class="modal-book-cover" width="200" height="300" loading="lazy">
+            </a>
+            <a href="#" data-pending target="_blank" rel="noopener noreferrer" class="modal-book" data-book="Stress-Free Living for a Healthier Heart">
+              <img src="books/h5.webp" alt="Stress-Free Living for a Healthier Heart" class="modal-book-cover" width="200" height="300" loading="lazy">
+            </a>
+          </div>
+
+          <!-- Mediterranean series is still in development — say so rather than
+               showing covers for books nobody can review yet. -->
+          <div class="modal-books-grid book-group is-empty" id="med-books">
+            <p class="modal-empty">This series is still in development — there's nothing to review just yet. Thank you for wanting to, though.</p>
+          </div>
+
+          <div class="modal-books-grid book-group is-empty" id="mental-books">
+            <p class="modal-empty">The journals and trackers aren't listed for review yet. Check back soon.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

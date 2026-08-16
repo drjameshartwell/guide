@@ -1,0 +1,33 @@
+# ─── SECRETS — never commit ────────────────────────────────────────────
+# marketguide.py contains a live Gmail App Password in plaintext
+# (APP_PASSWORD = "..."). It is a local mailing tool, not part of the
+# website. Before ever versioning it, move the password to an environment
+# variable: os.environ["GMAIL_APP_PASSWORD"]
+marketguide.py
+
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+
+# ─── SUBSCRIBER DATA — real people's names and email addresses ─────────
+# Publishing this would expose your readers' personal information.
+Notify_Me_Responses.csv
+*_Responses.csv
+
+# ─── OS / editor junk ──────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# ─── Build / local ─────────────────────────────────────────────────────
+node_modules/
+__pycache__/
+*.py[cod]
+.cdp-profile/
