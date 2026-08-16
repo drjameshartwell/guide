@@ -1921,157 +1921,520 @@ footer{
 
 
 
-/* ── TWO-STEP REVIEW MODAL STYLES ────────────────────────── */
-.modal-overlay {
+/* ══════════════════════════════════════════════════════════════════════
+   LEAVE-A-REVIEW MODAL
+   ──────────────────────────────────────────────────────────────────────
+   Two steps — series, then book — inside one dialog. Both panes are
+   rendered by initReviewModal() in script.js; everything here is the
+   chrome around them. All class names are prefixed rv- so nothing can
+   collide with the rest of the sheet.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.rv-overlay {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  inset: 0;
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(30, 52, 80, 0.55), transparent 60%),
+    rgba(4, 9, 16, 0.82);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: opacity 0.35s var(--ease-out), visibility 0.35s;
 }
 
-.modal-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
+.rv-overlay.is-open { opacity: 1; visibility: visible; }
 
-.modal-content {
-  background: var(--navy);
-  border: 1px solid rgba(201, 168, 76, 0.2);
-  border-radius: 20px;
-  padding: 2.5rem;
-  max-width: 500px; /* Kept tight so the buttons don't stretch too far */
-  width: 90%;
+/* ── THE DIALOG ─────────────────────────────────────────────────────── */
+.rv-dialog {
   position: relative;
-  transform: scale(0.95) translateY(20px);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: min(680px, 100%);
+  max-height: min(88vh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  background: linear-gradient(168deg, #1B2E45 0%, var(--navy) 52%, #091420 100%);
+  box-shadow:
+    0 40px 90px -28px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  opacity: 0;
+  transform: translateY(28px) scale(0.965);
+  transition: transform 0.5s var(--ease-spring), opacity 0.35s var(--ease-out);
 }
 
-.modal-overlay.active .modal-content {
-  transform: scale(1) translateY(0);
-}
+.rv-overlay.is-open .rv-dialog { opacity: 1; transform: none; }
 
-.modal-close {
+/* Hairline of gold across the top edge — the same accent the site uses
+   on section rules, just tighter. */
+.rv-dialog::before {
+  content: '';
   position: absolute;
-  top: 1rem; right: 1.5rem;
-  background: none; border: none;
-  color: var(--cream-dim); font-size: 2rem;
-  cursor: pointer; line-height: 1; z-index: 10;
-  transition: color 0.2s;
+  top: 0; left: 14%; right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.65;
+  pointer-events: none;
 }
 
-.modal-close:hover {
-  color: var(--gold);
+/* Soft warm bloom behind the header */
+.rv-glow {
+  position: absolute;
+  top: -160px; left: 50%;
+  width: 420px; height: 320px;
+  margin-left: -210px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.16), transparent 68%);
+  pointer-events: none;
 }
 
-.modal-header {
+.rv-close {
+  position: absolute;
+  top: 1.15rem; right: 1.15rem;
+  z-index: 5;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cream-dim);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.rv-close:hover {
+  color: var(--navy);
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: rotate(90deg);
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────────── */
+.rv-head {
+  position: relative;
+  padding: 2.4rem 2.4rem 1.4rem;
   text-align: center;
 }
 
-.modal-title {
-  font-family: var(--font-display);
+.rv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--gold);
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
 }
 
-.modal-sub {
-  color: var(--cream-dim);
-  font-size: 0.95rem;
+.rv-eyebrow svg { opacity: 0.85; }
+
+.rv-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 4.2vw, 2.1rem);
+  line-height: 1.15;
+  color: var(--cream);
+  margin: 0 0 0.55rem;
+}
+
+.rv-sub {
   margin: 0;
+  font-size: 0.88rem;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--cream-dim);
 }
 
-/* ── TWO-STEP SLIDER LOGIC ── */
-.modal-slider-viewport {
-  overflow: hidden;
-  width: 100%;
-  position: relative;
-  margin-top: 1.5rem;
-  /* Adds a smooth Apple-style animation to the height changes */
-  transition: height 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
-}
-
-.modal-slider-track {
+/* Two-segment progress rail */
+.rv-steps {
   display: flex;
-  width: 200%;
-  /* CRITICAL: align-items flex-start stops Step 1 from stretching to match Step 2 */
-  align-items: flex-start; 
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.35rem;
 }
 
-.modal-view {
-  width: 50%; /* Takes exactly half of the 200% track */
-  flex-shrink: 0;
-  padding: 0 0.5rem;
+.rv-step {
+  width: 26px; height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.35s var(--ease-out), width 0.35s var(--ease-out);
 }
 
-/* ── STEP 1: SERIES BUTTONS ── */
-.series-button-stack {
+.rv-step.is-active { width: 40px; background: var(--gold); }
+
+/* ── BODY: the two panes live here ──────────────────────────────────── */
+.rv-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.4rem 2.4rem 2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rv-body::-webkit-scrollbar { width: 6px; }
+.rv-body::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.25);
+  border-radius: 3px;
+}
+
+.rv-pane[hidden] { display: none; }
+
+/* Entrance for whichever pane just became active. Direction is set by the
+   script via .rv-from-right / .rv-from-left. */
+.rv-pane.rv-from-right { animation: rvSlideRight 0.42s var(--ease-out) both; }
+.rv-pane.rv-from-left  { animation: rvSlideLeft  0.42s var(--ease-out) both; }
+
+@keyframes rvSlideRight {
+  from { opacity: 0; transform: translateX(26px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes rvSlideLeft {
+  from { opacity: 0; transform: translateX(-26px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── STEP 1: SERIES ROWS ────────────────────────────────────────────── */
+.rv-series-list {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.7rem;
 }
 
-.modal-series-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--white);
-  padding: 1rem 1.2rem;
-  border-radius: 12px;
-  font-size: 1rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.rv-series {
+  --accent: var(--gold);
+  position: relative;
   display: flex;
-  justify-content: space-between;
-}
-
-.modal-series-btn:hover {
-  border-color: var(--gold);
-  background: rgba(201, 168, 76, 0.1);
-}
-
-/* ── STEP 2: BACK BUTTON & BOOK GRID ── */
-.modal-back-btn {
-  background: none; border: none;
-  color: var(--gold); cursor: pointer;
-  font-size: 0.9rem; padding: 0;
-  margin-bottom: 1rem;
-  display: inline-flex; align-items: center; gap: 0.5rem;
-}
-
-.book-group {
-  display: none; /* Hide all groups initially */
-}
-
-.book-group.active-group {
-  display: grid; /* Show only the active one */
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 1rem;
-  justify-content: center;
-}
-
-.modal-book-cover {
+  align-items: center;
+  gap: 1.1rem;
   width: 100%;
-  border-radius: 6px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  transition: transform 0.2s ease;
+  padding: 0.9rem 1.1rem;
+  text-align: left;
+  font: inherit;
+  color: var(--cream);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  overflow: hidden;
+  transition: border-color 0.3s var(--ease-out), background 0.3s var(--ease-out),
+              transform 0.3s var(--ease-out);
 }
 
-.modal-book:hover .modal-book-cover {
-  transform: translateY(-5px);
+/* Accent wash that grows in from the left on hover */
+.rv-series::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-out);
 }
 
-@media(max-width: 600px) {
-  .modal-content { padding: 2rem 1.5rem; }
+.rv-series:hover,
+.rv-series:focus-visible {
+  transform: translateX(4px);
+  border-color: rgba(201, 168, 76, 0.4);
+  background: rgba(201, 168, 76, 0.06);
+}
+
+.rv-series:hover::before,
+.rv-series:focus-visible::before { opacity: 1; }
+
+/* The little fanned stack of covers on the left of each row */
+.rv-series-covers {
+  position: relative;
+  flex: 0 0 auto;
+  width: 62px;
+  height: 66px;
+}
+
+.rv-series-covers img {
+  position: absolute;
+  top: 50%; left: 0;
+  width: 42px;
+  height: 63px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  transform-origin: bottom center;
+  transition: transform 0.45s var(--ease-spring);
+}
+
+.rv-series-covers img:nth-child(1) { transform: translateY(-50%) translateX(0)   rotate(-7deg); z-index: 1; }
+.rv-series-covers img:nth-child(2) { transform: translateY(-50%) translateX(9px) rotate(0deg);  z-index: 2; }
+.rv-series-covers img:nth-child(3) { transform: translateY(-50%) translateX(18px) rotate(7deg); z-index: 3; }
+
+.rv-series:hover .rv-series-covers img:nth-child(1) { transform: translateY(-50%) translateX(-4px) rotate(-13deg); }
+.rv-series:hover .rv-series-covers img:nth-child(3) { transform: translateY(-50%) translateX(22px) rotate(13deg); }
+
+.rv-series-text { flex: 1 1 auto; min-width: 0; }
+
+.rv-series-name {
+  display: block;
+  font-size: 0.97rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--cream);
+}
+
+.rv-series-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: var(--cream-dim);
+}
+
+.rv-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: 0 0 auto;
+}
+
+.rv-series-arrow {
+  flex: 0 0 auto;
+  color: var(--cream-dim);
+  transition: transform 0.3s var(--ease-out), color 0.3s;
+}
+
+.rv-series:hover .rv-series-arrow { transform: translateX(4px); color: var(--gold); }
+
+/* ── STEP 2: BACK LINK + BOOK GRID ──────────────────────────────────── */
+.rv-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.2rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--cream-dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.rv-back:hover {
+  color: var(--gold);
+  border-color: rgba(201, 168, 76, 0.4);
+  background: rgba(201, 168, 76, 0.08);
+}
+
+.rv-back svg { transition: transform 0.25s var(--ease-out); }
+.rv-back:hover svg { transform: translateX(-3px); }
+
+.rv-books {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1.1rem;
+}
+
+.rv-book {
+  --accent: var(--gold);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.rv-book-cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--navy-mid);
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.7);
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+
+.rv-book-cover img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Fallback tile for a book listed before its cover art exists */
+.rv-book-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; height: 100%;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  color: rgba(201, 168, 76, 0.55);
+  background: linear-gradient(150deg, var(--navy-lit), var(--navy));
+}
+
+/* Gold frame that fades in over the cover */
+.rv-book-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(201, 168, 76, 0);
+  transition: border-color 0.35s var(--ease-out);
+  pointer-events: none;
+}
+
+.rv-book:hover .rv-book-cover,
+.rv-book:focus-visible .rv-book-cover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 34px -10px rgba(0, 0, 0, 0.8);
+}
+
+.rv-book:hover .rv-book-cover::after { border-color: rgba(201, 168, 76, 0.75); }
+
+/* The hover veil with the stars */
+.rv-book-veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  text-align: center;
+  background: linear-gradient(to top, rgba(9, 20, 32, 0.94), rgba(9, 20, 32, 0.62));
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+.rv-book:hover .rv-book-veil,
+.rv-book:focus-visible .rv-book-veil { opacity: 1; }
+
+.rv-stars {
+  display: flex;
+  gap: 2px;
+  color: var(--gold);
+}
+
+.rv-veil-label {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+
+.rv-book-title {
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--cream-dim);
+  transition: color 0.25s;
+}
+
+.rv-book:hover .rv-book-title { color: var(--cream); }
+
+/* Books with no Amazon link yet — muted, and honest about why. */
+.rv-book.is-pending .rv-book-cover img { filter: grayscale(0.55) brightness(0.72); }
+.rv-book.is-pending .rv-book-veil { background: rgba(9, 20, 32, 0.78); }
+.rv-book.is-pending .rv-stars { color: var(--cream-dim); opacity: 0.5; }
+.rv-book.is-pending:hover .rv-book-cover { transform: translateY(-2px); }
+.rv-book.is-pending:hover .rv-book-cover::after { border-color: rgba(255, 255, 255, 0.18); }
+
+.rv-badge {
+  position: absolute;
+  top: 0.4rem; left: 0.4rem;
+  z-index: 2;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: rgba(9, 20, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+}
+
+/* Empty series */
+.rv-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--cream-dim);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+}
+
+/* ── FOOTER NOTE ────────────────────────────────────────────────────── */
+.rv-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.72rem;
+  font-weight: 300;
+  color: var(--cream-dim);
+  text-align: center;
+}
+
+.rv-foot svg { flex: 0 0 auto; opacity: 0.7; }
+
+/* ── SMALL SCREENS ──────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .rv-overlay { padding: 0.75rem; align-items: flex-end; }
+
+  .rv-dialog {
+    max-height: 92vh;
+    border-radius: 20px;
+  }
+
+  .rv-head { padding: 2rem 1.25rem 1.1rem; }
+  .rv-body { padding: 0.4rem 1.25rem 1.5rem; }
+  .rv-foot { padding: 0.85rem 1.25rem; font-size: 0.68rem; }
+
+  .rv-series { gap: 0.85rem; padding: 0.8rem 0.9rem; }
+  .rv-series-covers { width: 52px; height: 58px; }
+  .rv-series-covers img { width: 36px; height: 54px; }
+  .rv-series-covers img:nth-child(2) { transform: translateY(-50%) translateX(7px) rotate(0deg); }
+  .rv-series-covers img:nth-child(3) { transform: translateY(-50%) translateX(14px) rotate(7deg); }
+  .rv-series-name { font-size: 0.9rem; }
+
+  .rv-books { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 0.85rem; }
+  .rv-book-title { font-size: 0.72rem; }
+
+  /* There is no hover on touch. A live cover just opens Amazon when tapped,
+     so it needs no veil — but an unlinked one must still say so. */
+  .rv-book.is-pending .rv-book-veil { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-overlay,
+  .rv-dialog,
+  .rv-pane,
+  .rv-series,
+  .rv-book-cover { transition: none !important; animation: none !important; }
+  .rv-dialog { transform: none; }
 }
 
 
@@ -2148,20 +2511,6 @@ input:focus-visible,
   outline: 2px solid var(--gold);
   outline-offset: 3px;
   border-radius: 3px;
-}
-
-/* ── EMPTY STATES IN THE REVIEW MODAL ───────────────────────────────── */
-.book-group.is-empty.active-group {
-  display: block;
-  text-align: center;
-}
-
-.modal-empty {
-  font-size: 0.9rem;
-  font-weight: 300;
-  line-height: 1.7;
-  color: var(--cream-dim);
-  padding: 1.5rem 0.5rem;
 }
 
 /* ── FOOTER DISCLAIMER ──────────────────────────────────────────────── */

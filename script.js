@@ -575,86 +575,321 @@ function initHeroSwapper() {
 }
 document.addEventListener('DOMContentLoaded', initHeroSwapper);
 
-// ── TWO-STEP REVIEW MODAL ────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const openBtn = document.getElementById('openReviewBtn');
-  const closeBtn = document.getElementById('closeReviewBtn');
-  const modal = document.getElementById('reviewModal');
-  if (!openBtn || !modal || !closeBtn) return;
+/* ═══════════════════════════════════════════════════════════════════════
+   LEAVE-A-REVIEW MODAL
+   ═══════════════════════════════════════════════════════════════════════
+   Step 1 — the reader picks a series.
+   Step 2 — they pick the exact book, which opens that book's Amazon
+            "write a review" page in a new tab.
 
-  const viewport = modal.querySelector('.modal-slider-viewport');
-  const track = document.getElementById('modalTrack');
-  const step1 = modal.querySelector('.step-1');
-  const step2 = modal.querySelector('.step-2');
-  const seriesBtns = modal.querySelectorAll('.modal-series-btn');
-  const backBtn = document.getElementById('modalBackBtn');
-  const bookGroups = modal.querySelectorAll('.book-group');
+   ┌─ THE ONLY THING YOU EVER NEED TO EDIT ────────────────────────────┐
+   │ REVIEW_SERIES below. Everything on screen is built from it — the  │
+   │ series rows, the cover stacks, the book grid, the counts.         │
+   │                                                                    │
+   │ TO CONNECT A BOOK, put its ASIN in `asin`. The ASIN is the 10-     │
+   │ character code in the book's Amazon URL, e.g.                      │
+   │     amazon.com/dp/B0H5YJSCNH  ->  asin: 'B0H5YJSCNH'              │
+   │ A full URL works too — paste it in and it's used as-is.            │
+   │                                                                    │
+   │ A book left with asin: '' is NOT broken. It shows greyed out with  │
+   │ a "Link coming soon" badge and an honest message when tapped,      │
+   │ rather than sending a reader to a dead Amazon page.                │
+   └────────────────────────────────────────────────────────────────────┘
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const REVIEW_SERIES = [
+  {
+    id: 'heart',
+    name: 'The Heart Health Beginners Series',
+    accentRgb: '192,57,43',                 // --heart, matches the site's series card
+    books: [
+      { title: 'Reducing High Blood Pressure for Beginners', cover: 'books/h1.webp', asin: 'B0H61Y5XHK' },
+      { title: 'The DASH Diet for Beginners',                cover: 'books/h2.webp', asin: 'B0H6Z89F3B' },
+      { title: 'Heart-Healthy Meal Prep for Beginners',      cover: 'books/h3.webp', asin: 'B0H87D57K8' },
+      { title: 'Managing Diabetes & Blood Pressure Together', cover: 'books/h4.webp', asin: 'B0H8DJB2WB' },
+      { title: 'Stress-Free Living for a Healthier Heart',   cover: 'books/h5.webp', asin: 'B0H8DDDWG4' }
+    ]
+  },
+  {
+    id: 'mediterranean',
+    name: 'The Mediterranean Diet Series',
+    accentRgb: '26,107,60',                 // --dash
+    // Titles for books 2–5 are placeholders taken from the cover numbering —
+    // swap them for the real Amazon titles when the series goes live.
+    books: [
+      { title: 'The Mediterranean Diet for Beginners', cover: 'books/m1.webp', asin: 'B0HDHYT1LW' },
+      { title: 'Mediterranean Series — Book 2',        cover: 'books/m2.webp', asin: '' },
+      { title: 'Mediterranean Series — Book 3',        cover: 'books/m3.webp', asin: '' },
+      { title: 'Mediterranean Series — Book 4',        cover: 'books/m4.webp', asin: '' },
+      { title: 'Mediterranean Series — Book 5',        cover: 'books/m5.webp', asin: '' }
+    ]
+  },
+  {
+    id: 'trackers',
+    name: 'Clinical Trackers & Logbooks',
+    accentRgb: '8,145,178',                 // --ai
+    books: [
+      { title: 'Blood Pressure Home Monitor Guide',    cover: 'books/log1.webp', asin: 'B0HDBDHJCJ' },
+      { title: 'Daily Blood Pressure 52-Week Log Book', cover: 'books/log1.webp', asin: '' }
+    ]
+  },
+  {
+    id: 'journals',
+    name: 'Mental Health Journals',
+    accentRgb: '107,63,160',                // --mind
+    // `cover` may be left out entirely — the tile falls back to a lettered
+    // card in the house colours, so a book can be listed before its art exists.
+    books: [
+      { title: 'The Anxiety Relief Journal', cover: 'books/a1.webp', asin: '' }
+    ]
+  }
+];
+
+// An ASIN becomes Amazon's review composer; a full URL is trusted as given.
+function amazonReviewUrl(asin) {
+  const v = String(asin || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://www.amazon.com/review/create-review?asin=${encodeURIComponent(v)}`;
+}
+
+document.addEventListener('DOMContentLoaded', function initReviewModal() {
+  const modal    = document.getElementById('reviewModal');
+  const openBtn  = document.getElementById('openReviewBtn');
+  const closeBtn = document.getElementById('rvClose');
+  if (!modal || !openBtn || !closeBtn) return;
+
+  const dialog     = modal.querySelector('.rv-dialog');
+  const titleEl    = document.getElementById('rvTitle');
+  const subEl      = document.getElementById('rvSub');
+  const stepEls    = modal.querySelectorAll('.rv-step');
+  const paneSeries = document.getElementById('rvPaneSeries');
+  const paneBooks  = document.getElementById('rvPaneBooks');
+  const body       = document.getElementById('rvBody');
+
+  const COPY = {
+    1: { title: 'Which series did you read?', sub: 'Pick the series first — then the exact guide.' },
+    2: { title: 'Which guide exactly?',       sub: 'Tap a cover and Amazon opens on its review page.' }
+  };
 
   let lastFocused = null;
+  let currentStep = 1;
 
-  function setViewportHeight(stepElement) {
-    if (viewport && stepElement) viewport.style.height = stepElement.offsetHeight + 'px';
+  const escapeHtml = str => String(str).replace(/[&<>"']/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const starsMarkup = () =>
+    '<span class="rv-stars" aria-hidden="true">' +
+    Array.from({ length: 5 }, () =>
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>'
+    ).join('') + '</span>';
+
+  // ── STEP 1 ─────────────────────────────────────────────────────────────
+  function renderSeries() {
+    paneSeries.innerHTML =
+      '<div class="rv-series-list">' +
+      REVIEW_SERIES.map(s => {
+        const live  = s.books.filter(b => amazonReviewUrl(b.asin)).length;
+        const count = s.books.length;
+        const note  = count === 0
+          ? 'Not published yet'
+          : (live > 0
+              ? `${count} ${count === 1 ? 'guide' : 'guides'} · ready to review`
+              : `${count} ${count === 1 ? 'guide' : 'guides'} · links coming soon`);
+
+        // Up to three covers, fanned out behind each other.
+        const covers = s.books.slice(0, 3).filter(b => b.cover).map(b =>
+          `<img src="${escapeHtml(b.cover)}" alt="" loading="lazy" decoding="async">`
+        ).join('');
+
+        return `
+          <button class="rv-series" type="button" data-series="${escapeHtml(s.id)}"
+                  style="--accent:rgb(${s.accentRgb})">
+            <span class="rv-series-covers" aria-hidden="true">${covers}</span>
+            <span class="rv-series-text">
+              <span class="rv-series-name">${escapeHtml(s.name)}</span>
+              <span class="rv-series-note"><span class="rv-dot"></span>${escapeHtml(note)}</span>
+            </span>
+            <svg class="rv-series-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>`;
+      }).join('') +
+      '</div>';
   }
 
+  // ── STEP 2 ─────────────────────────────────────────────────────────────
+  function renderBooks(series) {
+    const back = `
+      <button class="rv-back" type="button" data-action="back">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        ${escapeHtml(series.name)}
+      </button>`;
+
+    if (!series.books.length) {
+      paneBooks.innerHTML = back +
+        '<p class="rv-empty">This series isn’t published yet, so there’s nothing to review just now.<br>Thank you for wanting to.</p>';
+      return;
+    }
+
+    const tiles = series.books.map(b => {
+      const url     = amazonReviewUrl(b.asin);
+      const pending = !url;
+      const label   = pending
+        ? `${b.title} — review link coming soon`
+        : `Write a review for ${b.title} on Amazon`;
+
+      const art = b.cover
+        ? `<img src="${escapeHtml(b.cover)}" alt="" loading="lazy" decoding="async">`
+        : `<span class="rv-book-blank" aria-hidden="true">${escapeHtml(b.title.trim().charAt(0))}</span>`;
+
+      return `
+        <button class="rv-book${pending ? ' is-pending' : ''}" type="button"
+                data-url="${escapeHtml(url)}" data-title="${escapeHtml(b.title)}"
+                aria-label="${escapeHtml(label)}" style="--accent:rgb(${series.accentRgb})">
+          <span class="rv-book-cover">
+            ${pending ? '<span class="rv-badge">Soon</span>' : ''}
+            ${art}
+            <span class="rv-book-veil">
+              ${starsMarkup()}
+              <span class="rv-veil-label">${pending ? 'Not linked yet' : 'Write a review'}</span>
+            </span>
+          </span>
+          <span class="rv-book-title">${escapeHtml(b.title)}</span>
+        </button>`;
+    }).join('');
+
+    paneBooks.innerHTML = back + `<div class="rv-books">${tiles}</div>`;
+  }
+
+  // ── STEP SWITCHING ─────────────────────────────────────────────────────
+  // The dialog's height is animated across the swap so the box grows and
+  // shrinks instead of snapping.
+  function goToStep(step, series) {
+    if (step === currentStep) return;
+    const from = dialog.getBoundingClientRect().height;
+
+    if (step === 2) renderBooks(series);
+
+    const entering = step === 2 ? paneBooks  : paneSeries;
+    const leaving  = step === 2 ? paneSeries : paneBooks;
+
+    leaving.hidden = true;
+    leaving.classList.remove('rv-from-right', 'rv-from-left');
+    entering.hidden = false;
+    entering.classList.remove('rv-from-right', 'rv-from-left');
+    void entering.offsetWidth;                       // restart the animation
+    entering.classList.add(step === 2 ? 'rv-from-right' : 'rv-from-left');
+
+    titleEl.textContent = COPY[step].title;
+    subEl.textContent   = COPY[step].sub;
+    stepEls.forEach((el, i) => el.classList.toggle('is-active', i < step));
+
+    body.scrollTop = 0;
+    currentStep = step;
+
+    if (!REDUCED_MOTION && dialog.animate) {
+      const to = dialog.getBoundingClientRect().height;
+      if (Math.abs(to - from) > 4) {
+        dialog.animate(
+          [{ height: from + 'px' }, { height: to + 'px' }],
+          { duration: 420, easing: 'cubic-bezier(0.25,1,0.5,1)' }
+        );
+      }
+    }
+
+    const firstBtn = entering.querySelector('button');
+    if (firstBtn) firstBtn.focus({ preventScroll: true });
+  }
+
+  // ── OPEN / CLOSE ───────────────────────────────────────────────────────
   function openModal(e) {
     if (e) e.preventDefault();
     lastFocused = document.activeElement;
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
+
+    // Reset to step 1 without animating — the dialog isn't visible yet.
+    currentStep = 1;
+    paneBooks.hidden = true;
+    paneSeries.hidden = false;
+    paneSeries.classList.remove('rv-from-right', 'rv-from-left');
+    titleEl.textContent = COPY[1].title;
+    subEl.textContent   = COPY[1].sub;
+    stepEls.forEach((el, i) => el.classList.toggle('is-active', i < 1));
+    body.scrollTop = 0;
+
+    // Padding stops the page shifting sideways when the scrollbar is hidden.
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    if (sbw > 0) document.body.style.paddingRight = sbw + 'px';
     document.body.style.overflow = 'hidden';
-    setViewportHeight(step1);
-    closeBtn.focus();
+
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => closeBtn.focus({ preventScroll: true }), 60);
   }
 
   function closeModal() {
-    modal.classList.remove('active');
+    if (!modal.classList.contains('is-open')) return;
+    modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-
-    setTimeout(() => {
-      if (track) track.style.transform = 'translateX(0)';
-      if (viewport) viewport.style.height = 'auto';
-    }, 300);
-
-    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    document.body.style.paddingRight = '';
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      lastFocused.focus({ preventScroll: true });
+    }
   }
+
+  // ── EVENTS ─────────────────────────────────────────────────────────────
+  renderSeries();
 
   openBtn.addEventListener('click', openModal);
   closeBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
+  paneSeries.addEventListener('click', e => {
+    const btn = e.target.closest('.rv-series');
+    if (!btn) return;
+    const series = REVIEW_SERIES.find(s => s.id === btn.getAttribute('data-series'));
+    if (series) goToStep(2, series);
+  });
+
+  paneBooks.addEventListener('click', e => {
+    if (e.target.closest('[data-action="back"]')) { goToStep(1); return; }
+
+    const tile = e.target.closest('.rv-book');
+    if (!tile) return;
+
+    const url   = tile.getAttribute('data-url');
+    const title = tile.getAttribute('data-title') || 'This guide';
+
+    if (!url) {
+      showToast(`“${title}” isn’t linked to Amazon yet — it’s coming very soon.`, 'info');
+      return;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+    showToast(`Opening Amazon so you can review “${title}”. Thank you.`, 'success');
+    closeModal();
+  });
+
+  // Escape closes; Tab is trapped inside the dialog while it's open.
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
-  });
+    if (!modal.classList.contains('is-open')) return;
 
-  seriesBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.getAttribute('data-target');
-      bookGroups.forEach(g => g.classList.remove('active-group'));
-      const targetGroup = document.getElementById(targetId);
-      if (targetGroup) targetGroup.classList.add('active-group');
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key !== 'Tab') return;
 
-      if (track) track.style.transform = 'translateX(-50%)';
-      setViewportHeight(step2);
-      if (backBtn) backBtn.focus();
-    });
-  });
+    const focusables = modal.querySelectorAll(
+      'button:not([disabled]), a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusables.length) return;
 
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      if (track) track.style.transform = 'translateX(0)';
-      setViewportHeight(step1);
-    });
-  }
+    const first = focusables[0];
+    const last  = focusables[focusables.length - 1];
 
-  // Keep the sliding viewport honest when the layout reflows.
-  let mResize = null;
-  window.addEventListener('resize', () => {
-    if (!modal.classList.contains('active')) return;
-    clearTimeout(mResize);
-    mResize = setTimeout(() => {
-      const onStep2 = track && track.style.transform.includes('-50%');
-      setViewportHeight(onStep2 ? step2 : step1);
-    }, 150);
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   });
 });
