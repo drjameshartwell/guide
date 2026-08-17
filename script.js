@@ -195,30 +195,147 @@ if (!REDUCED_MOTION) {
 // ── FREE GUIDES: DOWNLOAD, LOCKED STATE, SHARE ───────────────────────────
 // No email gate and no fake success message. A guide either downloads or
 // honestly says it isn't ready.
+//
+// THE ONE RULE HERE: never navigate the current tab to the PDF.
+// A lot of this traffic arrives from a Facebook link, which opens inside
+// Facebook's own in-app browser. That browser keeps no history of its own,
+// so if the PDF replaces the page, "back" returns the reader to Facebook —
+// the site is simply gone. Every path below either downloads silently or
+// opens the PDF in a NEW tab, leaving the site sitting untouched behind it.
 (function initGuides() {
   const grid = document.querySelector('.premium-asset-grid');
   if (!grid) return;
 
-  function triggerDownload(card) {
-    const file = card.getAttribute('data-file');
+  // Facebook / Instagram / TikTok in-app browsers cannot save files at all.
+  // The download attribute is ignored there and fetch-to-blob fails silently,
+  // so we don't pretend — we open the PDF and say how to keep it.
+  const IN_APP_BROWSER =
+    /FBAN|FBAV|FB_IAB|Instagram|Messenger|Line\/|Twitter|TikTok|Snapchat|Pinterest|LinkedInApp/i
+      .test(navigator.userAgent);
+
+  const seenKey = id => `djh:guide-saved:${id}`;
+
+  // ── Open in a new tab, never in this one ──────────────────────────────
+  // `message` overrides the default notice so a caller can say something
+  // more useful without a second toast wiping the first.
+  function openInNewTab(file, title, message) {
+    if (!file) return false;
+    const win = window.open(file, '_blank', 'noopener,noreferrer');
+    if (!win) {
+      showToast('Your browser blocked the new tab. Please allow pop-ups for this site and tap again.', 'error', 7000);
+      return false;
+    }
+    showToast(
+      message || `“${title}” is open in a new tab — this page is still here behind it.`,
+      'success',
+      message ? 8000 : 4200
+    );
+    return true;
+  }
+
+  // ── The real download ─────────────────────────────────────────────────
+  // Fetching to a Blob first is what makes this a genuine save rather than a
+  // navigation: the browser is handed bytes it already has, so it writes a
+  // file instead of deciding to render the PDF in the viewport.
+  function triggerDownload(card, btn) {
+    const file  = card.getAttribute('data-file');
     const title = card.getAttribute('data-title') || 'the guide';
+    const name  = file ? file.split('/').pop() : '';
 
     if (!file) {
       showToast('This guide isn’t attached yet. Please try again shortly.', 'error');
       return;
     }
 
-    // Anchor with `download` keeps the user on the page instead of navigating.
-    const a = document.createElement('a');
-    a.href = file;
-    a.download = file.split('/').pop();
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    // In-app browser: a download is impossible, so don't fake one.
+    if (IN_APP_BROWSER) {
+      const opened = openInNewTab(file, title,
+        `“${title}” is open in a new tab. To keep it, use your browser’s share button and choose Save to Files.`);
+      if (opened) markSaved(card, btn, 'opened');
+      return;
+    }
 
-    showToast(`Downloading "${title}" — check your downloads folder.`, 'success');
+    if (btn) { btn.disabled = true; btn.classList.add('is-working'); }
+
+    fetch(file, { credentials: 'same-origin' })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.blob();
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        // Revoke late — Safari needs the URL alive for a moment after click.
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+
+        showToast(`“${title}” has been saved to your device.`, 'success');
+        markSaved(card, btn, 'saved');
+      })
+      .catch(() => {
+        // Offline, or the file moved. Fall back to a new tab so the reader
+        // still gets the guide, and the site still isn't replaced.
+        if (openInNewTab(file, title)) markSaved(card, btn, 'opened');
+      })
+      .finally(() => {
+        if (btn) { btn.disabled = false; btn.classList.remove('is-working'); }
+      });
   }
+
+  // ── "You already have this one" state ─────────────────────────────────
+  // Once a reader has the guide, offering "Download the guide" again is just
+  // confusing. The button becomes a way back into what they already saved.
+  // `mode` is 'saved' when the file really landed on their device, and
+  // 'opened' when we could only show it. Saying "saved" to someone in the
+  // Facebook browser, who has nothing on disk, would be a lie.
+  function markSaved(card, btn, mode) {
+    const id = card.getAttribute('data-guide') || card.id;
+    try { localStorage.setItem(seenKey(id), mode); } catch (_) {}
+    applySavedState(card, btn, mode);
+  }
+
+  function applySavedState(card, btn, mode) {
+    if (card.classList.contains('is-saved')) return;
+    card.classList.add('is-saved');
+
+    const button = btn || card.querySelector('[data-action="download"], [data-action="open"]');
+    if (!button) return;
+
+    button.setAttribute('data-action', 'open');
+    button.innerHTML =
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>' +
+      '<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>' +
+      'Read the guide';
+
+    const status = card.querySelector('.asset-status');
+    if (status) status.textContent = mode === 'saved' ? 'Saved' : 'Opened';
+
+    if (!card.querySelector('.asset-saved-note')) {
+      const note = document.createElement('p');
+      note.className = 'asset-saved-note';
+      note.textContent = mode === 'saved'
+        ? 'Already saved to your device. Opens in a new tab.'
+        : 'You’ve opened this one. It opens again in a new tab.';
+      const actions = card.querySelector('.asset-actions');
+      if (actions) actions.insertAdjacentElement('beforebegin', note);
+    }
+  }
+
+  // Restore the state on every visit, so a returning reader isn't told to
+  // download something already sitting on their phone.
+  document.querySelectorAll('.asset-card.is-live').forEach(card => {
+    const id = card.getAttribute('data-guide') || card.id;
+    let mode = null;
+    try { mode = localStorage.getItem(seenKey(id)); } catch (_) {}
+    // '1' is the value an earlier build wrote — treat it as a real save.
+    if (mode === '1') mode = 'saved';
+    if (mode === 'saved' || mode === 'opened') applySavedState(card, null, mode);
+  });
 
   // "What's inside" disclosure. Mobile-only in CSS, but the handler is
   // harmless on desktop where the button is display:none and unclickable.
@@ -242,7 +359,10 @@ if (!REDUCED_MOTION) {
     const title = card.getAttribute('data-title') || 'This guide';
 
     if (action === 'download') {
-      triggerDownload(card);
+      triggerDownload(card, btn);
+
+    } else if (action === 'open') {
+      openInNewTab(card.getAttribute('data-file'), title);
 
     } else if (action === 'locked') {
       showToast(`"${title}" is still being written. Please check back soon — it’s coming.`, 'info');

@@ -1238,6 +1238,47 @@ nav.scrolled{
   border-color: rgba(201,168,76,0.35);
 }
 
+/* ── ALREADY SAVED ──────────────────────────────────────────────────
+   Once a reader has the PDF, the card stops selling and starts serving:
+   the button reads "Read the guide" and drops to an outlined treatment so
+   it no longer competes with the guides they haven't taken yet. */
+.asset-card.is-saved .asset-btn {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.45);
+}
+
+.asset-card.is-saved .asset-btn:hover {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold);
+  color: var(--gold-lt);
+}
+
+.asset-card.is-saved .asset-status {
+  background: rgba(26,107,60,0.18);
+  border-color: rgba(168,213,181,0.35);
+  color: var(--dash-lt);
+}
+
+.asset-saved-note {
+  padding: 0 1.5rem 0.65rem;
+  font-size: 0.7rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--cream-dim);
+  opacity: 0.75;
+}
+
+/* Button is mid-fetch — stop double taps reading as a dead button. */
+.asset-btn.is-working {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+@media(max-width: 900px) {
+  .asset-saved-note { padding: 0 1.1rem 0.55rem; }
+}
+
 /* Highlight applied when someone arrives from a shared link. */
 .asset-card.is-highlighted {
   border-color: var(--gold);
