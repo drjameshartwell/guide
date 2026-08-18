@@ -2584,3 +2584,406 @@ input:focus-visible,
   .reveal { opacity: 1 !important; transform: none !important; }
   .asset-card.is-highlighted { animation: none !important; }
 }
+
+
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE BUTTON ON AN UNFINISHED GUIDE
+   ──────────────────────────────────────────────────────────────────────
+   These cards carry .is-locked, which styles their button as inert —
+   greyed out, cursor: not-allowed. That was right when the button only
+   said "Not ready yet". It now opens a working sign-up, so it has to look
+   like something worth pressing: gold outline, real pointer.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.asset-card.is-locked .asset-btn[data-action="notify"] {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(201, 168, 76, 0.45);
+  cursor: pointer;
+}
+
+.asset-card.is-locked .asset-btn[data-action="notify"]:hover,
+.asset-card.is-locked .asset-btn[data-action="notify"]:focus-visible {
+  background: rgba(201, 168, 76, 0.12);
+  border-color: var(--gold);
+  color: var(--gold-lt);
+}
+
+/* Already signed up. Quiet green, matching the "saved" state on a guide
+   they've already downloaded — the card has stopped asking for anything. */
+.asset-card.is-locked .asset-btn.is-on-list,
+.asset-card.is-locked .asset-btn.is-on-list:hover {
+  background: rgba(26, 107, 60, 0.14);
+  border-color: rgba(168, 213, 181, 0.35);
+  color: var(--dash-lt);
+  cursor: pointer;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   "TELL ME WHEN IT'S READY" MODAL
+   ──────────────────────────────────────────────────────────────────────
+   Same material as the review modal — navy glass, gold hairline — but
+   narrower, because it asks for two things instead of offering twelve.
+
+   Sizing here is deliberately generous. The readers this site is built
+   for are mostly over 55 and mostly on a phone: inputs are 1rem (below
+   that, iOS zooms the whole page on focus) and targets clear 48px.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.nt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;              /* above the toast, which may be showing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(30, 52, 80, 0.55), transparent 60%),
+    rgba(4, 9, 16, 0.82);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s var(--ease-out), visibility 0.35s;
+}
+
+.nt-overlay.is-open { opacity: 1; visibility: visible; }
+
+.nt-dialog {
+  position: relative;
+  width: min(470px, 100%);
+  max-height: min(92vh, 780px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  background: linear-gradient(168deg, #1B2E45 0%, var(--navy) 52%, #091420 100%);
+  box-shadow:
+    0 40px 90px -28px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  opacity: 0;
+  transform: translateY(28px) scale(0.965);
+  transition: transform 0.5s var(--ease-spring), opacity 0.35s var(--ease-out);
+}
+
+.nt-overlay.is-open .nt-dialog { opacity: 1; transform: none; }
+
+.nt-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 14%; right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.nt-glow {
+  position: absolute;
+  top: -170px; left: 50%;
+  width: 420px; height: 330px;
+  margin-left: -210px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.17), transparent 68%);
+  pointer-events: none;
+}
+
+.nt-close {
+  position: absolute;
+  top: 1.15rem; right: 1.15rem;
+  z-index: 5;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cream-dim);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.nt-close:hover {
+  color: var(--navy);
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: rotate(90deg);
+}
+
+/* The dialog opens with focus on this button, so it must not light up like
+   the main action — a filled gold X would pull the eye straight to "leave".
+   A ring is enough to tell a keyboard user where they are. */
+.nt-close:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  color: var(--cream);
+}
+
+.nt-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nt-body::-webkit-scrollbar { width: 6px; }
+.nt-body::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.25);
+  border-radius: 3px;
+}
+
+.nt-pane[hidden] { display: none; }
+.nt-pane { animation: ntFade 0.4s var(--ease-out) both; }
+
+@keyframes ntFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────────── */
+.nt-head {
+  padding: 2.4rem 2rem 0.4rem;
+  text-align: center;
+}
+
+/* The cover, tilted just enough to read as an object rather than an
+   image. It is the fastest way for the reader to be sure which guide
+   they are signing up for. */
+.nt-cover {
+  display: block;
+  width: 88px;
+  height: auto;
+  margin: 0 auto 1.35rem;
+  border-radius: 6px;
+  transform: rotate(-3deg);
+  box-shadow:
+    0 18px 34px -12px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(201, 168, 76, 0.18);
+}
+
+.nt-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.8rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.nt-eyebrow svg { opacity: 0.85; }
+
+.nt-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 4.2vw, 1.95rem);
+  line-height: 1.15;
+  color: var(--cream);
+  margin: 0 0 0.6rem;
+}
+
+.nt-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--cream-dim);
+}
+
+/* ── THE FORM ────────────────────────────────────────────────────────── */
+.nt-form {
+  padding: 1.6rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nt-field { text-align: left; }
+
+.nt-label {
+  display: block;
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--cream);
+}
+
+.nt-optional {
+  font-weight: 300;
+  letter-spacing: 0;
+  color: var(--cream-dim);
+  opacity: 0.75;
+}
+
+.nt-input {
+  width: 100%;
+  padding: 0.95rem 1.05rem;
+  font-family: var(--font-body);
+  font-size: 1rem;            /* below 1rem, iOS zooms the page on focus */
+  font-weight: 300;
+  color: var(--cream);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 13px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.25s var(--ease-out),
+              background 0.25s var(--ease-out),
+              box-shadow 0.25s var(--ease-out);
+}
+
+.nt-input::placeholder { color: rgba(200, 191, 168, 0.4); }
+
+.nt-input:hover { border-color: rgba(255, 255, 255, 0.2); }
+
+.nt-input:focus {
+  border-color: rgba(201, 168, 76, 0.65);
+  background: rgba(201, 168, 76, 0.05);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.14);
+}
+
+.nt-input.is-invalid {
+  border-color: rgba(192, 57, 43, 0.7);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+}
+
+/* Chrome paints its own yellow over autofilled inputs. */
+.nt-input:-webkit-autofill,
+.nt-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--cream);
+  -webkit-box-shadow: 0 0 0 1000px #16283C inset;
+  caret-color: var(--cream);
+}
+
+.nt-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--heart-lt);
+}
+
+.nt-error[hidden] { display: none; }
+
+/* ── SUBMIT ──────────────────────────────────────────────────────────── */
+.nt-submit {
+  position: relative;
+  width: 100%;
+  margin-top: 0.35rem;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.nt-submit[disabled] { cursor: default; opacity: 0.75; }
+
+.nt-spinner {
+  position: absolute;
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  border: 2px solid rgba(13, 27, 42, 0.28);
+  border-top-color: var(--navy);
+  opacity: 0;
+  animation: ntSpin 0.7s linear infinite;
+}
+
+.nt-submit.is-working .nt-submit-label { opacity: 0; }
+.nt-submit.is-working .nt-spinner { opacity: 1; }
+
+@keyframes ntSpin { to { transform: rotate(360deg); } }
+
+/* ── THE PROMISE ─────────────────────────────────────────────────────── */
+/* Placed under the button rather than above it: the reader who is going
+   to hesitate hesitates with their thumb already on the button. */
+.nt-promise {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.76rem;
+  font-weight: 300;
+  line-height: 1.6;
+  text-align: left;
+  color: var(--cream-dim);
+  opacity: 0.85;
+}
+
+.nt-promise svg { flex: 0 0 auto; margin-top: 0.2rem; opacity: 0.7; }
+
+/* ── THE THANK YOU ───────────────────────────────────────────────────── */
+.nt-pane--done {
+  padding: 3rem 2rem 2.6rem;
+  text-align: center;
+}
+
+.nt-tick {
+  width: 62px; height: 62px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--dash-lt);
+  background: rgba(26, 107, 60, 0.16);
+  border: 1px solid rgba(168, 213, 181, 0.32);
+  animation: ntPop 0.55s var(--ease-spring) both;
+}
+
+@keyframes ntPop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: none; }
+}
+
+.nt-done-btn {
+  margin-top: 1.9rem;
+  padding: 0.8rem 2.2rem;
+  font: inherit;
+  font-size: 0.86rem;
+  letter-spacing: 0.03em;
+  color: var(--cream);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.25s var(--ease-out), border-color 0.25s var(--ease-out);
+}
+
+.nt-done-btn:hover,
+.nt-done-btn:focus-visible {
+  background: rgba(201, 168, 76, 0.12);
+  border-color: rgba(201, 168, 76, 0.45);
+}
+
+/* ── SMALL SCREENS ───────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .nt-overlay { padding: 0.75rem; align-items: flex-end; }
+
+  .nt-dialog { max-height: 93vh; border-radius: 20px; }
+
+  .nt-head       { padding: 2.1rem 1.3rem 0.3rem; }
+  .nt-form       { padding: 1.4rem 1.3rem 1.7rem; }
+  .nt-pane--done { padding: 2.6rem 1.3rem 2.2rem; }
+
+  .nt-cover { width: 74px; margin-bottom: 1.15rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-overlay,
+  .nt-dialog,
+  .nt-pane,
+  .nt-tick,
+  .nt-input { transition: none !important; animation: none !important; }
+  .nt-dialog { transform: none; }
+  .nt-cover  { transform: none; }
+}

@@ -577,9 +577,9 @@
         </div>
 
         <div class="asset-actions">
-          <button type="button" class="btn-primary asset-btn" data-action="locked" aria-disabled="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Not ready yet
+          <button type="button" class="btn-primary asset-btn" data-action="notify">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            Tell me when it's ready
           </button>
           <button type="button" class="asset-share" data-action="share" aria-label="Share The Vagus Nerve Reset" title="Share this guide">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
@@ -625,9 +625,9 @@
         </div>
 
         <div class="asset-actions">
-          <button type="button" class="btn-primary asset-btn" data-action="locked" aria-disabled="true">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Not ready yet
+          <button type="button" class="btn-primary asset-btn" data-action="notify">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            Tell me when it's ready
           </button>
           <button type="button" class="asset-share" data-action="share" aria-label="Share Breaking the Cortisol Chain" title="Share this guide">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
@@ -655,6 +655,97 @@
     <a href="#guides">Free Guides</a>
   </div>
 </footer>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     "TELL ME WHEN IT'S READY" MODAL
+     ──────────────────────────────────────────────────────────────────
+     Opens from the two guides that aren't written yet. This is the only
+     place on the site that asks for an email address, and it asks for a
+     guide the reader cannot have yet — so it never stands between anyone
+     and a download. The live guide stays free with no email gate.
+
+     WHERE THE EMAILS GO: the Google Sheet you connect in analytics.js
+     (LOG_ENDPOINT). See SETUP-TRACKING.md. Until that's connected the
+     form tells the reader honestly that sign-up isn't open yet, rather
+     than pretending it worked.
+═══════════════════════════════════════════════════════════════════════ -->
+<div id="notifyModal" class="nt-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="ntTitle" aria-hidden="true">
+
+  <div class="nt-dialog">
+    <span class="nt-glow" aria-hidden="true"></span>
+
+    <button id="ntClose" class="nt-close" type="button" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+    </button>
+
+    <div class="nt-body">
+
+      <!-- ── THE FORM ──────────────────────────────────────────────── -->
+      <div class="nt-pane is-active" id="ntPaneForm">
+        <header class="nt-head">
+          <img src="" alt="" class="nt-cover" id="ntCover" width="300" height="450" hidden>
+
+          <p class="nt-eyebrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+            Still being written
+          </p>
+
+          <h2 class="nt-title" id="ntTitle">The Vagus Nerve Reset</h2>
+          <p class="nt-sub" id="ntSub">
+            It isn't finished yet. Leave your email and I'll send it to you
+            the day it's ready — you won't have to remember to come back.
+          </p>
+        </header>
+
+        <form class="nt-form" id="ntForm" novalidate>
+          <div class="nt-field">
+            <label class="nt-label" for="ntName">Your first name <span class="nt-optional">(optional)</span></label>
+            <input class="nt-input" id="ntName" name="name" type="text"
+                   autocomplete="given-name" placeholder="Margaret"
+                   maxlength="60" spellcheck="false">
+          </div>
+
+          <div class="nt-field">
+            <label class="nt-label" for="ntEmail">Your email address</label>
+            <input class="nt-input" id="ntEmail" name="email" type="email"
+                   autocomplete="email" inputmode="email" placeholder="you@example.com"
+                   maxlength="120" required spellcheck="false"
+                   aria-describedby="ntError">
+            <p class="nt-error" id="ntError" role="alert" hidden></p>
+          </div>
+
+          <button type="submit" class="btn-primary nt-submit" id="ntSubmit">
+            <span class="nt-submit-label">Tell me when it's ready</span>
+            <span class="nt-spinner" aria-hidden="true"></span>
+          </button>
+
+          <p class="nt-promise">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>One email, once, when this guide is published. No newsletter,
+            no sharing your address with anyone, and you can reply
+            &ldquo;stop&rdquo; at any time.</span>
+          </p>
+        </form>
+      </div>
+
+      <!-- ── AFTER IT WORKED ───────────────────────────────────────── -->
+      <div class="nt-pane nt-pane--done" id="ntPaneDone" hidden>
+        <div class="nt-tick" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h2 class="nt-title">You're on the list.</h2>
+        <p class="nt-sub" id="ntDoneSub">
+          I've written your address down next to this guide. When it's
+          finished, it comes to you.
+        </p>
+        <button type="button" class="nt-done-btn" data-action="nt-close">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 
 <!-- ══════════════════════════════════════════════════════════════════════
@@ -704,6 +795,7 @@
   </div>
 </div>
 
+<script src="analytics.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

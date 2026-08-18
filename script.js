@@ -6,6 +6,18 @@
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const IS_TOUCH = window.matchMedia('(hover: none)').matches;
 
+// Tracking lives in analytics.js and is entirely optional. This wrapper means
+// every call site below can fire and forget: if that file is missing, or the
+// reader blocks it, nothing here notices and nothing breaks.
+//
+// Deliberately NOT called `track` — a top-level `function track()` in a plain
+// script becomes window.track and would overwrite the real one in analytics.js.
+const sendEvent = (function () {
+  return function sendEvent(event, params) {
+    try { if (window.track) window.track(event, params || {}); } catch (_) {}
+  };
+})();
+
 // ── LOADER ──────────────────────────────────────────────────────────────
 // Must never trap the page. Three independent ways out: the load event, a
 // hard 3s ceiling, and the <noscript> rule in the head.
@@ -242,8 +254,13 @@ if (!REDUCED_MOTION) {
     const title = card.getAttribute('data-title') || 'the guide';
     const name  = file ? file.split('/').pop() : '';
 
+    const guideId = card.getAttribute('data-guide') || card.id;
+
+    sendEvent('guide_download_click', { guide: guideId, title: title });
+
     if (!file) {
       showToast('This guide isn’t attached yet. Please try again shortly.', 'error');
+      sendEvent('guide_download_failed', { guide: guideId, reason: 'no_file' });
       return;
     }
 
@@ -252,6 +269,10 @@ if (!REDUCED_MOTION) {
       const opened = openInNewTab(file, title,
         `“${title}” is open in a new tab. To keep it, use your browser’s share button and choose Save to Files.`);
       if (opened) markSaved(card, btn, 'opened');
+      // The single most useful number on this site. Every one of these is a
+      // reader who came from a Facebook link and physically cannot save the
+      // file — a traffic problem wearing the mask of a conversion problem.
+      sendEvent('guide_blocked_in_app', { guide: guideId, opened: !!opened });
       return;
     }
 
@@ -275,11 +296,17 @@ if (!REDUCED_MOTION) {
 
         showToast(`“${title}” has been saved to your device.`, 'success');
         markSaved(card, btn, 'saved');
+        sendEvent('guide_download', { guide: guideId, title: title, outcome: 'saved' });
       })
       .catch(() => {
         // Offline, or the file moved. Fall back to a new tab so the reader
         // still gets the guide, and the site still isn't replaced.
-        if (openInNewTab(file, title)) markSaved(card, btn, 'opened');
+        const opened = openInNewTab(file, title);
+        if (opened) markSaved(card, btn, 'opened');
+        sendEvent('guide_download', {
+          guide: guideId, title: title,
+          outcome: opened ? 'opened_fallback' : 'failed'
+        });
       })
       .finally(() => {
         if (btn) { btn.disabled = false; btn.classList.remove('is-working'); }
@@ -358,17 +385,31 @@ if (!REDUCED_MOTION) {
     const action = btn.getAttribute('data-action');
     const title = card.getAttribute('data-title') || 'This guide';
 
+    const guideId = card.getAttribute('data-guide') || card.id;
+
     if (action === 'download') {
       triggerDownload(card, btn);
 
     } else if (action === 'open') {
       openInNewTab(card.getAttribute('data-file'), title);
+      sendEvent('guide_reopen', { guide: guideId, title: title });
+
+    } else if (action === 'notify') {
+      // The guide isn't written yet, so there is nothing to give them now.
+      // Offer to bring it to them instead of asking them to remember us.
+      if (typeof openNotifyModal === 'function') {
+        openNotifyModal(card, btn);
+      } else {
+        showToast(`"${title}" is still being written. Please check back soon — it’s coming.`, 'info');
+      }
 
     } else if (action === 'locked') {
       showToast(`"${title}" is still being written. Please check back soon — it’s coming.`, 'info');
+      sendEvent('guide_locked_click', { guide: guideId, title: title });
 
     } else if (action === 'share') {
       shareGuide(title, '#' + card.id);
+      sendEvent('guide_share', { guide: guideId, title: title });
     }
   });
 })();
@@ -924,6 +965,7 @@ document.addEventListener('DOMContentLoaded', function initReviewModal() {
   function openModal(e) {
     if (e) e.preventDefault();
     lastFocused = document.activeElement;
+    sendEvent('review_modal_open', {});
 
     // Reset to step 1 without animating — the dialog isn't visible yet.
     currentStep = 1;
@@ -967,7 +1009,10 @@ document.addEventListener('DOMContentLoaded', function initReviewModal() {
     const btn = e.target.closest('.rv-series');
     if (!btn) return;
     const series = REVIEW_SERIES.find(s => s.id === btn.getAttribute('data-series'));
-    if (series) goToStep(2, series);
+    if (series) {
+      sendEvent('review_series_pick', { series: series.id });
+      goToStep(2, series);
+    }
   });
 
   paneBooks.addEventListener('click', e => {
@@ -981,8 +1026,13 @@ document.addEventListener('DOMContentLoaded', function initReviewModal() {
 
     if (!url) {
       showToast(`“${title}” isn’t linked to Amazon yet — it’s coming very soon.`, 'info');
+      sendEvent('review_book_unlinked', { title: title });
       return;
     }
+
+    // The end of the funnel. Opened with window.open rather than a link, so
+    // the automatic outbound-link tracking in analytics.js can't see it.
+    sendEvent('review_amazon_open', { title: title, destination: url });
 
     window.open(url, '_blank', 'noopener,noreferrer');
     showToast(`Opening Amazon so you can review “${title}”. Thank you.`, 'success');
@@ -1003,6 +1053,308 @@ document.addEventListener('DOMContentLoaded', function initReviewModal() {
 
     const first = focusables[0];
     const last  = focusables[focusables.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+});
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   "TELL ME WHEN IT'S READY"
+   ─────────────────────────────────────────────────────────────────────
+   The only place on this site that asks for an email address — and it asks
+   about a guide that does not exist yet, so it can never stand between a
+   reader and a file they came here to download. The live guide stays free
+   and ungated.
+
+   Two rules carried over from the download code, for the same reason:
+     • Never fake success. If the address didn't reach the sheet, say so.
+     • Never replace the page. Everything happens in the dialog.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// Called by the guides grid. Global on purpose — the grid handler above runs
+// in its own IIFE and looks this up by name.
+var openNotifyModal;
+
+document.addEventListener('DOMContentLoaded', function initNotifyModal() {
+  const modal = document.getElementById('notifyModal');
+  if (!modal) return;
+
+  const dialog    = modal.querySelector('.nt-dialog');
+  const closeBtn  = document.getElementById('ntClose');
+  const paneForm  = document.getElementById('ntPaneForm');
+  const paneDone  = document.getElementById('ntPaneDone');
+  const form      = document.getElementById('ntForm');
+  const nameInput = document.getElementById('ntName');
+  const mailInput = document.getElementById('ntEmail');
+  const errorEl   = document.getElementById('ntError');
+  const submitBtn = document.getElementById('ntSubmit');
+  const titleEl   = document.getElementById('ntTitle');
+  const subEl     = document.getElementById('ntSub');
+  const doneSubEl = document.getElementById('ntDoneSub');
+  const coverEl   = document.getElementById('ntCover');
+
+  if (!form || !mailInput) return;
+
+  let currentGuide = { id: '', title: '' };
+  let lastFocused  = null;
+  let sending      = false;
+
+  const listKey = id => 'jh_notify_' + id;
+
+  // analytics.js works out where this visit came from and parks it here, so
+  // a sign-up row can say "this address came from the Facebook post".
+  // Private browsing throws on sessionStorage, hence the guard.
+  function visitSource() {
+    try { return sessionStorage.getItem('jh_src') || ''; } catch (_) { return ''; }
+  }
+
+  // ── WHO ALREADY SIGNED UP ─────────────────────────────────────────────
+  // Asking a second time for a guide that still hasn't shipped reads as
+  // "you didn't listen", so the button changes once they're on the list.
+  function alreadyOnList(id) {
+    try { return !!localStorage.getItem(listKey(id)); } catch (_) { return false; }
+  }
+
+  function markOnList(card, btn) {
+    try { localStorage.setItem(listKey(currentGuide.id), new Date().toISOString()); } catch (_) {}
+    applyOnListState(card, btn);
+  }
+
+  function applyOnListState(card, btn) {
+    const button = btn || (card && card.querySelector('[data-action="notify"]'));
+    if (!button) return;
+    button.innerHTML =
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<polyline points="20 6 9 17 4 12"></polyline></svg> You\'re on the list';
+    button.classList.add('is-on-list');
+  }
+
+  document.querySelectorAll('.asset-card [data-action="notify"]').forEach(btn => {
+    const card = btn.closest('.asset-card');
+    if (!card) return;
+    const id = card.getAttribute('data-guide') || card.id;
+    if (alreadyOnList(id)) applyOnListState(card, btn);
+  });
+
+  // ── OPEN / CLOSE ──────────────────────────────────────────────────────
+  openNotifyModal = function (card, btn) {
+    const id    = card.getAttribute('data-guide') || card.id;
+    const title = card.getAttribute('data-title') || 'this guide';
+    currentGuide = { id: id, title: title, card: card, btn: btn };
+
+    sendEvent('notify_modal_open', { guide: id, title: title });
+
+    // Someone already signed up re-opening the dialog gets the confirmation
+    // back, not an empty form asking for the same address again.
+    const done = alreadyOnList(id);
+    showPane(done ? 'done' : 'form');
+
+    titleEl.textContent = title;
+    if (doneSubEl) {
+      doneSubEl.textContent = done
+        ? `Your address is already down next to “${title}”. It comes to you the day it's finished.`
+        : `I've written your address down next to “${title}”. When it's finished, it comes to you.`;
+    }
+
+    // Reuse the card's own cover so the reader can see what they signed up for.
+    const thumb = card.querySelector('.asset-thumb');
+    if (coverEl && thumb && thumb.getAttribute('src')) {
+      coverEl.src = thumb.getAttribute('src');
+      coverEl.alt = 'Cover of ' + title;
+      coverEl.hidden = false;
+    } else if (coverEl) {
+      coverEl.hidden = true;
+    }
+
+    clearError();
+    form.reset();
+
+    lastFocused = document.activeElement;
+
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    if (sbw > 0) document.body.style.paddingRight = sbw + 'px';
+    document.body.style.overflow = 'hidden';
+
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // Don't autofocus the email field: on a phone that throws the keyboard up
+    // over the dialog before the reader has read a word of it.
+    setTimeout(() => closeBtn && closeBtn.focus({ preventScroll: true }), 60);
+  };
+
+  function closeNotify() {
+    if (!modal.classList.contains('is-open')) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      lastFocused.focus({ preventScroll: true });
+    }
+  }
+
+  function showPane(which) {
+    const toDone = which === 'done';
+    paneForm.hidden = toDone;
+    paneDone.hidden = !toDone;
+    paneForm.classList.toggle('is-active', !toDone);
+    paneDone.classList.toggle('is-active', toDone);
+
+    if (!REDUCED_MOTION && dialog && dialog.animate) {
+      const from = dialog.getBoundingClientRect().height;
+      requestAnimationFrame(() => {
+        const to = dialog.getBoundingClientRect().height;
+        if (Math.abs(to - from) > 4) {
+          dialog.animate(
+            [{ height: from + 'px' }, { height: to + 'px' }],
+            { duration: 420, easing: 'cubic-bezier(0.25,1,0.5,1)' }
+          );
+        }
+      });
+    }
+  }
+
+  // ── VALIDATION ────────────────────────────────────────────────────────
+  // Deliberately loose. A regex strict enough to be "correct" rejects real
+  // addresses, and every rejection here is a reader lost for no reason.
+  function looksLikeEmail(value) {
+    return /^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/.test(value);
+  }
+
+  function showError(message) {
+    if (!errorEl) return;
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+    mailInput.classList.add('is-invalid');
+    mailInput.setAttribute('aria-invalid', 'true');
+  }
+
+  function clearError() {
+    if (!errorEl) return;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    mailInput.classList.remove('is-invalid');
+    mailInput.removeAttribute('aria-invalid');
+  }
+
+  mailInput.addEventListener('input', clearError);
+
+  function setSending(on) {
+    sending = on;
+    submitBtn.disabled = on;
+    submitBtn.classList.toggle('is-working', on);
+  }
+
+  // ── SUBMIT ────────────────────────────────────────────────────────────
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (sending) return;
+
+    const email = (mailInput.value || '').trim();
+    const name  = (nameInput ? nameInput.value : '').trim();
+
+    if (!email) {
+      showError('Please enter your email address so I know where to send it.');
+      mailInput.focus();
+      return;
+    }
+
+    if (!looksLikeEmail(email)) {
+      showError('That address doesn’t look quite right — please check it over.');
+      mailInput.focus();
+      sendEvent('notify_invalid_email', { guide: currentGuide.id });
+      return;
+    }
+
+    const endpoint = (window.TRACKING && window.TRACKING.LOG_ENDPOINT) || '';
+
+    // No endpoint means the sheet was never connected. Say that plainly
+    // rather than showing a thank-you for an address going nowhere.
+    if (!endpoint) {
+      showError('Sign-ups aren’t open just yet. Please follow the Facebook page — I announce every guide there the day it lands.');
+      sendEvent('notify_no_endpoint', { guide: currentGuide.id });
+      return;
+    }
+
+    clearError();
+    setSending(true);
+    sendEvent('notify_submit', { guide: currentGuide.id, title: currentGuide.title });
+
+    const payload = JSON.stringify({
+      type: 'signup',
+      guide: currentGuide.id,
+      guide_title: currentGuide.title,
+      name: name,
+      email: email,
+      source: visitSource(),
+      origin: location.origin,
+      page: location.pathname + location.hash,
+      referrer: document.referrer || '',
+      language: navigator.language || '',
+      time_local: new Date().toString()
+    });
+
+    // A plain string body makes the browser send Content-Type: text/plain,
+    // which keeps this a "simple" request — Google Apps Script cannot answer
+    // the CORS preflight that any other content type would trigger.
+    const controller = window.AbortController ? new AbortController() : null;
+    const timer = setTimeout(() => { if (controller) controller.abort(); }, 15000);
+
+    fetch(endpoint, {
+      method: 'POST',
+      body: payload,
+      signal: controller ? controller.signal : undefined
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(() => {
+        clearTimeout(timer);
+        setSending(false);
+        markOnList(currentGuide.card, currentGuide.btn);
+        showPane('done');
+        sendEvent('notify_success', { guide: currentGuide.id, title: currentGuide.title });
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        setSending(false);
+        showError('That didn’t go through — it may be your connection. Please try once more, and if it still fails, message me on Facebook and I’ll add you myself.');
+        sendEvent('notify_failed', { guide: currentGuide.id });
+      });
+  });
+
+  // ── EVENTS ────────────────────────────────────────────────────────────
+  if (closeBtn) closeBtn.addEventListener('click', closeNotify);
+  modal.addEventListener('click', e => { if (e.target === modal) closeNotify(); });
+
+  paneDone.addEventListener('click', e => {
+    if (e.target.closest('[data-action="nt-close"]')) closeNotify();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!modal.classList.contains('is-open')) return;
+
+    if (e.key === 'Escape') { closeNotify(); return; }
+    if (e.key !== 'Tab') return;
+
+    const focusables = modal.querySelectorAll(
+      'button:not([disabled]), a[href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const visible = Array.prototype.filter.call(focusables, el => el.offsetParent !== null);
+    if (!visible.length) return;
+
+    const first = visible[0];
+    const last  = visible[visible.length - 1];
 
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault();
